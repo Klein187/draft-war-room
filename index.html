@@ -337,6 +337,66 @@ body{
 
 .roster-row .pos-badge[data-extra]{opacity:.9}
 .slot-tag.extra{color:#FFD9A0; background:#2A1E0C; border-color:#4A3616}
+
+/* ---------- utility row ---------- */
+.util-row{display:flex; gap:6px; margin-bottom:var(--sp-4)}
+.util-btn{flex:1; min-height:36px; background:var(--panel); color:var(--text-2);
+  border:1px solid var(--line-soft); border-radius:var(--r-sm); padding:8px 6px;
+  font-family:var(--sans); font-size:12px; font-weight:600; cursor:pointer}
+.util-btn.on{background:var(--cyan-dim); color:var(--cyan); border-color:#1E5B7D}
+
+/* ---------- queue ---------- */
+.queue-list{display:flex; flex-direction:column; gap:4px; margin-bottom:var(--sp-4)}
+.queue-row{display:flex; align-items:center; gap:var(--sp-2); width:100%; min-height:38px;
+  background:var(--panel-2); border:1px solid var(--line-soft); border-radius:var(--r-sm);
+  padding:6px 8px; cursor:pointer; text-align:left; font-family:var(--sans); color:var(--text)}
+.queue-row:hover{border-color:var(--line)}
+.queue-name{font-size:13.5px; font-weight:600}
+.queue-empty{font-size:12px; color:var(--text-3); padding:6px 2px var(--sp-4)}
+
+/* ---------- opponent needs ---------- */
+.opp-list{display:flex; flex-direction:column; gap:5px}
+.opp-row{display:flex; align-items:center; gap:var(--sp-2)}
+.opp-pos{font-family:var(--cond); font-weight:700; font-size:12px; letter-spacing:.06em; width:26px; flex-shrink:0}
+.opp-bar{flex:1; height:7px; background:var(--panel-2); border-radius:4px; overflow:hidden}
+.opp-bar i{display:block; height:100%; border-radius:4px}
+.opp-num{font-family:var(--mono); font-size:11.5px; font-weight:600; color:var(--text-2);
+  width:28px; text-align:right; font-variant-numeric:tabular-nums; flex-shrink:0}
+
+/* ---------- tier dividers ---------- */
+.tier-rule{display:flex; align-items:center; gap:var(--sp-2); padding:12px 2px 6px;
+  font-family:var(--cond); font-size:10.5px; font-weight:700; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--text-3)}
+.tier-rule i{flex:1; height:1px; background:var(--line-soft)}
+.tier-n{font-family:var(--mono); letter-spacing:0; text-transform:none}
+
+/* ---------- queued / avoided rows ---------- */
+.player-row.avoided{opacity:.45}
+.player-row.queued{box-shadow:inset 2px 0 0 var(--gold)}
+.avoid-mark{color:var(--coral)}
+.lookup-btn.on{background:#2A2410; color:var(--gold); border-color:#5A4A18}
+.lookup-btn.off{background:#3A1620; color:#FFA3AF; border-color:#6B2F3C}
+
+/* ---------- import window ---------- */
+.import-box{width:100%; min-height:150px; background:var(--ink); border:1px solid var(--line);
+  border-radius:var(--r-sm); color:var(--text); padding:10px; font-family:var(--mono);
+  font-size:12.5px; line-height:1.5; resize:vertical; outline:none}
+.import-box:focus{border-color:var(--cyan)}
+.import-stat{font-size:13px; color:var(--text-2); margin:var(--sp-3) 0 var(--sp-2)}
+.import-stat b{font-family:var(--mono); color:var(--mint); font-size:16px}
+.import-row{display:flex; align-items:center; gap:var(--sp-2); font-size:13px;
+  padding:5px 0; border-top:1px solid var(--line-soft)}
+code{font-family:var(--mono); font-size:11.5px; background:var(--panel-2);
+  border:1px solid var(--line-soft); border-radius:4px; padding:1px 5px}
+
+/* ---------- shortcuts ---------- */
+.keys{display:flex; flex-direction:column; gap:2px}
+.key-row{display:flex; align-items:center; gap:var(--sp-3); padding:7px 0;
+  border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-2)}
+kbd{font-family:var(--mono); font-size:11.5px; font-weight:600; background:var(--panel-2);
+  border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:3px 8px;
+  color:var(--text); min-width:52px; text-align:center; flex-shrink:0}
+
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -777,10 +837,12 @@ function marketState(){
   /* pressure = will the current quality tier at this position survive until I pick again?
      expTaken = share of the next `gap` picks likely spent on this position.
      >= 1 means the tier is probably gone before your next turn. */
+  var opp = opponentNeeds();
   ['QB','RB','WR','TE'].forEach(function(pos){
     var st = m[pos];
     st.gap = gap;
-    st.expTaken = totalDemand > 0 ? gap * (st.demand / totalDemand) : 0;
+    /* real opponent demand when we can compute it, proportional estimate as fallback */
+    st.expTaken = opp ? opp.need[pos] : (totalDemand > 0 ? gap * (st.demand / totalDemand) : 0);
     st.pressure = st.tierLeft > 0 ? st.expTaken / st.tierLeft : 99;
   });
   return m;
@@ -1211,6 +1273,7 @@ function suggest(n){
   var mkt = marketState();
 
   var pool = avail.filter(function(p){
+    if (isAvoided(p.rank)) return false;          /* your never-draft list */
     if (counts[p.pos] >= POS_CAP[p.pos]) return false;
     if (forced) {
       if (p.pos === 'K') return counts.K === 0;
@@ -1221,6 +1284,7 @@ function suggest(n){
     }
     return true;
   });
+  if (!pool.length) pool = avail.filter(function(p){ return !isAvoided(p.rank); });
   if (!pool.length) pool = avail;
 
   /* same as the AI: K/DST rank last, so surface the best eligible one explicitly */
@@ -1302,6 +1366,7 @@ function suggest(n){
     else if (p.rookie) { reasons.push('2026 rookie \u2014 max long-term upside'); score += 3; }
     else if (p.age <= 23 && p.pos !== 'DST') { reasons.push('Only ' + p.age + ' \u2014 ascending asset'); score += 2; }
 
+    if (isQueued(p.rank)) reasons.unshift('On your queue');
     if (idxInPool < gap && gap < 30) { reasons.push('Likely gone before your next pick (' + gap + ' away)'); score += 6; }
     /* real projections inform but never override dynasty rank in a dynasty league */
     if (PROJ[p.rank]) {
@@ -1459,7 +1524,7 @@ function renderView(){
   document.body.className = wide ? 'wide' : 'narrow';
 
   if (wide) {
-    if (L) L.innerHTML = panelMyCounts() + panelMarket() + panelSuggest();
+    if (L) L.innerHTML = panelQueue() + panelMyCounts() + panelOpponents() + panelMarket() + panelSuggest();
     if (R) R.innerHTML = panelList();
     v.innerHTML = panelControls() + centerContent();
   } else {
@@ -1495,6 +1560,13 @@ function panelControls(){
     '<button class="sl-connect' + (SLEEPER.on ? ' live' : '') + '" onclick="openSleeper()">' +
       (SLEEPER.on ? 'Sleeper live \u00b7 ' + SLEEPER.applied + ' picks' : 'Connect Sleeper') + '</button>' +
     '<button class="mock-start-btn sl-half" onclick="startMock()">Mock draft</button>' +
+    '</div>' +
+    '<div class="util-row">' +
+      '<button type="button" class="util-btn" onclick="openImport()">Rankings' +
+        (BOARD_SOURCE === 'imported' ? ' \u00b7 custom' : '') + '</button>' +
+      '<button type="button" class="util-btn' + (ALERT_ON ? ' on' : '') + '" onclick="setAlert(' + (!ALERT_ON) + ')" ' +
+        'aria-pressed="' + ALERT_ON + '">Pick alert ' + (ALERT_ON ? 'on' : 'off') + '</button>' +
+      '<button type="button" class="util-btn" onclick="openShortcuts()">Keys</button>' +
     '</div>';
 }
 
@@ -1625,13 +1697,25 @@ function panelList(){
   if (!list.length) {
     html += '<div class="empty">No players match. Clear the search or filter.</div>';
   } else {
+    var lastTier = null;
     list.forEach(function(p){
+      if (posFilter !== 'ALL' && p.tier !== lastTier) {
+        var leftInTier = all.filter(function(x){ return x.tier === p.tier; }).length;
+        html += '<div class="tier-rule"><span>Tier ' + p.tier + '</span><i></i><span class="tier-n">' +
+          leftInTier + ' left</span></div>';
+        lastTier = p.tier;
+      }
       var pr = PROJ[p.rank];
       var eg = pr ? projEdge(p) : null;
-      html += '<button type="button" class="player-row" onclick="openPlayer(' + p.rank + ')" ' +
+      html += '<button type="button" class="player-row' +
+        (isAvoided(p.rank) ? ' avoided' : '') + (isQueued(p.rank) ? ' queued' : '') +
+        '" onclick="openPlayer(' + p.rank + ')" ' +
         'aria-label="' + esc(p.name) + ', ' + p.pos + ' ' + p.team + ', rank ' + p.rank + '. Open player card.">' +
         '<div class="rank-num">' + p.rank + '</div>' + badge(p.pos) +
-        '<div class="flex1"><div class="p-name">' + esc(p.name) + ' ' + ageChip(p) +
+        '<div class="flex1"><div class="p-name">' +
+          (isQueued(p.rank) ? '<span class="star">\u2605</span> ' : '') +
+          (isAvoided(p.rank) ? '<span class="avoid-mark">\u2298</span> ' : '') +
+          esc(p.name) + ' ' + ageChip(p) +
           (pr ? ' <span class="ppg-chip">' + pr.ppg.toFixed(1) + '</span>' : '') + '</div>' +
         '<div class="team-tag">' + p.team + ' &middot; Tier ' + p.tier + (p.rookie ? ' &middot; Rookie' : '') +
           (eg && Math.abs(eg.delta) >= 6 ? ' &middot; <span class="' + (eg.delta>0?'edge-up':'edge-dn') + '">' +
@@ -1667,7 +1751,8 @@ function panelFeed(){
 }
 
 function viewDraft(){
-  return panelControls() + panelMyCounts() + panelMarket() + panelSuggest() + panelList();
+  return panelControls() + panelQueue() + panelMyCounts() + panelOpponents() +
+         panelMarket() + panelSuggest() + panelList();
 }
 
 function viewTeam(){
@@ -1844,6 +1929,12 @@ function openPlayer(rank){
   html += '<div class="scout-head">Research</div>' +
     '<div class="lookup-row">' +
       '<button class="lookup-btn" onclick="openResearch(\'https://www.fantasypros.com/nfl/players/' + slug + '.php\', \'' + esc(p.name) + '\')">Open FantasyPros profile</button>' +
+    '</div>';
+  html += '<div class="lookup-row" style="margin-top:10px">' +
+    '<button type="button" class="lookup-btn' + (isQueued(p.rank) ? ' on' : '') + '" onclick="toggleQueue(' + p.rank + ')">' +
+      (isQueued(p.rank) ? '\u2605 Queued' : 'Add to queue') + '</button>' +
+    '<button type="button" class="lookup-btn' + (isAvoided(p.rank) ? ' off' : '') + '" onclick="toggleAvoid(' + p.rank + ')">' +
+      (isAvoided(p.rank) ? '\u2298 Avoiding' : 'Never draft') + '</button>' +
     '</div>';
   html += '<div class="modal-actions">' +
     (isTaken || done
@@ -2100,7 +2191,7 @@ function applyDraftConfig(draft, myUserId, reserveSlots){
 
 /* --- pull picks and mirror them onto the board --- */
 function syncPicks(){
-  if (!SLEEPER.draftId || mockMode) return;
+  if (!SLEEPER.draftId || mockMode || SLEEPER.paused) return;
   sleeperGet('/draft/' + SLEEPER.draftId + '/picks').then(function(rows){
     if (!Array.isArray(rows)) return;
     rows.sort(function(a,b){ return (a.pick_no||0) - (b.pick_no||0); });
@@ -2207,6 +2298,9 @@ function renderSleeperWindow(){
     if (SLEEPER.warn) h += '<div class="sl-warn">' + esc(SLEEPER.warn) + '</div>';
     if (SLEEPER.unmatched.length) h += '<div class="sl-meta">Not on the board (added automatically): ' +
       esc(SLEEPER.unmatched.slice(-6).join(', ')) + '</div>';
+    h += '<button class="sl-btn" onclick="SLEEPER.paused=!SLEEPER.paused;renderSleeperWindow();render()">' +
+      (SLEEPER.paused ? 'Resume syncing' : 'Pause syncing') + '</button>';
+    if (SLEEPER.paused) h += '<div class="sl-meta">Paused \u2014 picks you log by hand will stick until you resume.</div>';
     h += '<button class="sl-btn sl-stop" onclick="stopSync();renderSleeperWindow()">Disconnect</button>';
   } else if (SLEEPER.leagues && SLEEPER.leagues.length && !SLEEPER.leagueId) {
     h += '<div class="sl-meta">Choose the league to follow:</div>';
@@ -2246,7 +2340,453 @@ function restoreSleeper(){
   }).catch(function(){});
 }
 
+
+/* ==================== CUSTOM RANKINGS IMPORT ==================== */
+var DEFAULT_PLAYERS = null;   /* snapshot of the built-in board */
+var BOARD_SOURCE = 'built-in';
+
+function snapshotDefaultBoard(){
+  if (DEFAULT_PLAYERS) return;
+  DEFAULT_PLAYERS = PLAYERS.map(function(p){
+    return { rank:p.rank, name:p.name, pos:p.pos, team:p.team, age:p.age, tier:p.tier, rookie:p.rookie };
+  });
+}
+
+var POS_TOKEN = /^(QB|RB|WR|TE|K|PK|DST|DEF|D\/ST)\d*$/i;
+var TEAM_TOKEN = /^(ARI|ATL|BAL|BUF|CAR|CHI|CIN|CLE|DAL|DEN|DET|GB|GNB|HOU|IND|JAX|JAC|KC|KAN|LV|LVR|OAK|LAC|LAR|MIA|MIN|NE|NWE|NO|NOR|NYG|NYJ|PHI|PIT|SF|SFO|SEA|TB|TAM|TEN|WSH|WAS|FA)$/i;
+var TEAM_FIX = { GNB:'GB', KAN:'KC', LVR:'LV', OAK:'LV', NWE:'NE', NOR:'NO', SFO:'SF', TAM:'TB', WAS:'WSH', JAC:'JAX' };
+
+function normPos(t){
+  var p = String(t).toUpperCase().replace(/\d+$/,'');
+  if (p === 'PK') p = 'K';
+  if (p === 'DEF' || p === 'D/ST') p = 'DST';
+  return p;
+}
+function normTeam(t){
+  var x = String(t).toUpperCase();
+  return TEAM_FIX[x] || x;
+}
+
+/* Accepts CSV, TSV, or plain lines like "1. Ja'Marr Chase WR CIN" or "Ja'Marr Chase, WR, CIN" */
+function parseBoardText(text){
+  var out = [], skipped = 0;
+  String(text).split(/\r?\n/).forEach(function(raw){
+    var line = raw.trim();
+    if (!line) return;
+    if (/^(rank|rk|player|name|pos|position|overall)\b/i.test(line) && !/\d/.test(line.slice(0,3))) { return; } /* header */
+
+    var rank = null, tier = null, age = null, pos = null, team = null;
+    var fields = /[\t,;|]/.test(line) ? line.split(/[\t,;|]/) : line.split(/\s+/);
+    fields = fields.map(function(f){ return f.trim(); }).filter(function(f){ return f.length; });
+
+    var nameParts = [];
+    fields.forEach(function(f, idx){
+      var bare = f.replace(/[()#.]/g,'');
+      if (!bare) return;
+      if (idx === 0 && /^\d{1,3}\.?$/.test(f)) { rank = parseInt(bare,10); return; }
+      if (!pos && POS_TOKEN.test(bare)) { pos = normPos(bare); return; }
+      if (!team && TEAM_TOKEN.test(bare)) { team = normTeam(bare); return; }
+      if (/^(tier)\s*\d+$/i.test(bare)) { tier = parseInt(bare.replace(/\D/g,''),10); return; }
+      if (/^\d{1,2}$/.test(bare) && nameParts.length && age === null && parseInt(bare,10) >= 18 && parseInt(bare,10) <= 45) {
+        age = parseInt(bare,10); return;
+      }
+      if (/^\d+$/.test(bare)) return;   /* stray numbers (bye weeks, adp) */
+      nameParts.push(f.replace(/[()]/g,''));
+    });
+    var name = nameParts.join(' ').replace(/\s{2,}/g,' ').replace(/^[\-\s.]+|[\-\s.]+$/g,'').trim();
+    if (!name || name.length < 2) { skipped++; return; }
+    out.push({ name:name, pos:pos, team:team, rank:rank, tier:tier, age:age });
+  });
+  return { rows: out, skipped: skipped };
+}
+
+/* Build a new board: imported order first, then anything from the old board we still need */
+function applyImportedBoard(rows){
+  snapshotDefaultBoard();
+  var oldByKey = {};
+  PLAYERS.forEach(function(p){ oldByKey[normName(p.name) + '|' + p.pos] = p; });
+  var oldByName = {};
+  PLAYERS.forEach(function(p){ (oldByName[normName(p.name)] = oldByName[normName(p.name)] || []).push(p); });
+
+  var built = [], used = {}, matched = 0, added = 0;
+  rows.forEach(function(r){
+    var pos = r.pos, prev = null;
+    if (pos && oldByKey[normName(r.name) + '|' + pos]) prev = oldByKey[normName(r.name) + '|' + pos];
+    else {
+      var hits = oldByName[normName(r.name)] || [];
+      if (hits.length === 1) prev = hits[0];
+    }
+    if (prev) { matched++; used[prev.rank] = 1; }
+    else added++;
+    built.push({
+      name: prev ? prev.name : r.name,
+      pos: pos || (prev ? prev.pos : 'WR'),
+      team: r.team || (prev ? prev.team : 'FA'),
+      age: r.age != null ? r.age : (prev ? prev.age : 0),
+      rookie: prev ? prev.rookie : false,
+      _tier: r.tier
+    });
+  });
+  /* keep the rest of the old board underneath so deep rounds still have players */
+  var carried = 0;
+  PLAYERS.forEach(function(p){
+    if (used[p.rank]) return;
+    carried++;
+    built.push({ name:p.name, pos:p.pos, team:p.team, age:p.age, rookie:p.rookie, _tier:null });
+  });
+
+  /* re-rank, and derive tiers per position (every 6 = a tier) when none supplied */
+  var posSeen = {};
+  built.forEach(function(p, i){
+    p.rank = i + 1;
+    posSeen[p.pos] = (posSeen[p.pos] || 0) + 1;
+    p.posRank = posSeen[p.pos];
+    p.tier = p._tier != null ? p._tier : Math.ceil(p.posRank / 6);
+    delete p._tier;
+  });
+
+  PLAYERS.length = 0;
+  built.forEach(function(p){ PLAYERS.push(p); });
+  for (var k in BY_RANK) delete BY_RANK[k];
+  PLAYERS.forEach(function(p){ BY_RANK[p.rank] = p; });
+  NAME_INDEX = null;
+  BOARD_SOURCE = 'imported';
+  return { matched: matched, added: added, carried: carried, total: PLAYERS.length };
+}
+
+function restoreDefaultBoard(){
+  if (!DEFAULT_PLAYERS) return;
+  PLAYERS.length = 0;
+  var posSeen = {};
+  DEFAULT_PLAYERS.forEach(function(d){
+    var p = { rank:d.rank, name:d.name, pos:d.pos, team:d.team, age:d.age, tier:d.tier, rookie:d.rookie };
+    posSeen[p.pos] = (posSeen[p.pos] || 0) + 1;
+    p.posRank = posSeen[p.pos];
+    PLAYERS.push(p);
+  });
+  for (var k in BY_RANK) delete BY_RANK[k];
+  PLAYERS.forEach(function(p){ BY_RANK[p.rank] = p; });
+  NAME_INDEX = null;
+  BOARD_SOURCE = 'built-in';
+  if (hasStorage()) window.storage.delete('board-v2').catch(function(){});
+}
+
+function saveBoard(){
+  if (!hasStorage() || BOARD_SOURCE !== 'imported') return;
+  var slim = PLAYERS.map(function(p){ return [p.name,p.pos,p.team,p.age,p.tier,p.rookie?1:0]; });
+  window.storage.set('board-v2', JSON.stringify(slim)).catch(function(){});
+}
+function loadSavedBoard(){
+  if (!hasStorage()) return;
+  window.storage.get('board-v2').then(function(r){
+    if (!r || !r.value) return;
+    try {
+      var slim = JSON.parse(r.value);
+      if (!Array.isArray(slim) || !slim.length) return;
+      snapshotDefaultBoard();
+      PLAYERS.length = 0;
+      var posSeen = {};
+      slim.forEach(function(a, i){
+        var p = { rank:i+1, name:a[0], pos:a[1], team:a[2], age:a[3], tier:a[4], rookie:!!a[5] };
+        posSeen[p.pos] = (posSeen[p.pos] || 0) + 1;
+        p.posRank = posSeen[p.pos];
+        PLAYERS.push(p);
+      });
+      for (var k in BY_RANK) delete BY_RANK[k];
+      PLAYERS.forEach(function(p){ BY_RANK[p.rank] = p; });
+      NAME_INDEX = null;
+      BOARD_SOURCE = 'imported';
+      render();
+    } catch(e){}
+  }).catch(function(){});
+}
+
+/* ---- import window ---- */
+var IMPORT_PREVIEW = null;
+function openImport(){ IMPORT_PREVIEW = null; renderImportWindow(); }
+
+function importPreview(){
+  var el = document.getElementById('import-text');
+  var txt = el ? el.value : '';
+  var res = parseBoardText(txt);
+  IMPORT_PREVIEW = res;
+  IMPORT_PREVIEW.raw = txt;
+  renderImportWindow();
+}
+function importCommit(){
+  if (!IMPORT_PREVIEW || !IMPORT_PREVIEW.rows.length) return;
+  var res = applyImportedBoard(IMPORT_PREVIEW.rows);
+  picks.length = 0;
+  QUEUE.length = 0;
+  for (var k in AVOID) delete AVOID[k];
+  saveBoard(); saveDraft(); saveLists();
+  IMPORT_PREVIEW = null;
+  closeWindow('win-import');
+  render();
+}
+function importReset(){
+  restoreDefaultBoard();
+  picks.length = 0;
+  QUEUE.length = 0;
+  for (var k in AVOID) delete AVOID[k];
+  saveDraft(); saveLists();
+  closeWindow('win-import');
+  render();
+}
+
+function renderImportWindow(){
+  var h = '';
+  h += '<div class="sl-meta">Paste a ranking list \u2014 one player per line. CSV, tab-separated, ' +
+       'or plain text like <code>1. Ja\u0027Marr Chase WR CIN</code> all work. ' +
+       'Position and team are optional; anything already on the board keeps its age and rookie status.</div>';
+  h += '<textarea id="import-text" class="import-box" rows="8" placeholder="1. Puka Nacua WR LAR&#10;2. Ja\u0027Marr Chase WR CIN&#10;3. Bijan Robinson RB ATL">' +
+       (IMPORT_PREVIEW && IMPORT_PREVIEW.raw ? esc(IMPORT_PREVIEW.raw) : '') + '</textarea>';
+  h += '<button class="sl-btn" onclick="importPreview()">Check this list</button>';
+
+  if (IMPORT_PREVIEW) {
+    var r = IMPORT_PREVIEW;
+    if (!r.rows.length) {
+      h += '<div class="sl-warn">Nothing readable found. Each line needs at least a player name.</div>';
+    } else {
+      h += '<div class="import-stat"><b>' + r.rows.length + '</b> players read' +
+           (r.skipped ? ' \u00b7 ' + r.skipped + ' lines skipped' : '') + '</div>';
+      h += '<div class="sl-meta">First few:</div>';
+      r.rows.slice(0,5).forEach(function(x, i){
+        h += '<div class="import-row"><span class="board-pick">' + (i+1) + '</span>' +
+             '<span class="flex1">' + esc(x.name) + '</span>' +
+             '<span class="team-tag">' + esc(x.pos || '?') + ' ' + esc(x.team || '') + '</span></div>';
+      });
+      h += '<div class="sl-warn">Importing replaces the ranking board and clears any picks, ' +
+           'your queue and your avoid list. Do this before the draft starts, not during.</div>';
+      h += '<button class="sl-btn" onclick="importCommit()">Use these rankings</button>';
+    }
+  }
+  h += '<div class="sl-meta" style="margin-top:14px">Board in use: <b>' + BOARD_SOURCE + '</b> \u00b7 ' + PLAYERS.length + ' players</div>';
+  if (BOARD_SOURCE === 'imported') {
+    h += '<button class="sl-btn sl-stop" onclick="importReset()">Go back to the built-in board</button>';
+  }
+  openWindow('win-import', 'Import rankings', h, 'player');
+}
+
+/* ==================== QUEUE + AVOID LIST ==================== */
+var QUEUE = [];      /* ranks, in your order */
+var AVOID = {};      /* rank -> 1 */
+
+function isQueued(rank){ return QUEUE.indexOf(rank) >= 0; }
+function isAvoided(rank){ return !!AVOID[rank]; }
+function toggleQueue(rank){
+  var i = QUEUE.indexOf(rank);
+  if (i >= 0) QUEUE.splice(i,1);
+  else { QUEUE.push(rank); delete AVOID[rank]; }
+  saveLists(); render();
+  if (currentModalRank === rank) openPlayer(rank);
+}
+function toggleAvoid(rank){
+  if (AVOID[rank]) delete AVOID[rank];
+  else { AVOID[rank] = 1; var i = QUEUE.indexOf(rank); if (i >= 0) QUEUE.splice(i,1); }
+  saveLists(); render();
+  if (currentModalRank === rank) openPlayer(rank);
+}
+function saveLists(){
+  if (!hasStorage()) return;
+  var names = { q: QUEUE.map(function(r){ return BY_RANK[r] ? BY_RANK[r].name : null; }).filter(Boolean),
+                a: Object.keys(AVOID).map(function(r){ return BY_RANK[r] ? BY_RANK[r].name : null; }).filter(Boolean) };
+  window.storage.set('lists-v1', JSON.stringify(names)).catch(function(){});
+}
+function loadLists(){
+  if (!hasStorage()) return;
+  window.storage.get('lists-v1').then(function(r){
+    if (!r || !r.value) return;
+    try {
+      var d = JSON.parse(r.value);
+      var byName = {};
+      PLAYERS.forEach(function(p){ byName[normName(p.name)] = p.rank; });
+      QUEUE.length = 0;
+      (d.q||[]).forEach(function(n){ var rk = byName[normName(n)]; if (rk) QUEUE.push(rk); });
+      (d.a||[]).forEach(function(n){ var rk = byName[normName(n)]; if (rk) AVOID[rk] = 1; });
+      render();
+    } catch(e){}
+  }).catch(function(){});
+}
+
+/* ---- panel: your queue, minus anyone already taken ---- */
+function panelQueue(){
+  var taken = {}; picks.forEach(function(r){ taken[r] = 1; });
+  var live = QUEUE.filter(function(r){ return !taken[r] && BY_RANK[r]; });
+  var gone = QUEUE.length - live.length;
+  if (!QUEUE.length) return '';
+  var html = '<div class="mine-head">Your queue <span class="mine-total">' + live.length + ' available' +
+    (gone ? ' \u00b7 ' + gone + ' taken' : '') + '</span></div>';
+  if (!live.length) {
+    html += '<div class="queue-empty">Everyone you queued has been drafted.</div>';
+  } else {
+    html += '<div class="queue-list">';
+    live.slice(0,8).forEach(function(r){
+      var p = BY_RANK[r];
+      html += '<button type="button" class="queue-row" onclick="openPlayer(' + r + ')" ' +
+        'aria-label="' + esc(p.name) + ', queued. Open player card.">' +
+        badge(p.pos) + '<span class="flex1 queue-name">' + esc(p.name) + '</span>' +
+        '<span class="team-tag">#' + p.rank + '</span></button>';
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+/* ==================== OPPONENT NEED MATRIX ==================== */
+/* Which teams pick before you again, and what does each of them still have to fill? */
+function opponentNeeds(){
+  var cur = picks.length + 1;
+  if (cur > TOTAL_PICKS) return null;
+  var nextMine = teamOnClock(cur) === MY_SLOT ? myNextPick(cur + 1) : myNextPick(cur);
+  var gap = nextMine ? nextMine - cur : 0;
+  if (gap <= 0) return null;
+
+  var need = { QB:0, RB:0, WR:0, TE:0 };
+  var teamsSeen = {};
+  var rosterCache = {};
+  for (var p = cur; p < cur + gap && p <= TOTAL_PICKS; p++) {
+    var t = teamOnClock(p);
+    if (t === MY_SLOT) continue;
+    teamsSeen[t] = 1;
+    if (!rosterCache[t]) rosterCache[t] = needCounts(teamPlayers(t));
+    var c = rosterCache[t];
+    var flexUsed = Math.max(0, c.RB - STARTERS.RB) + Math.max(0, c.WR - STARTERS.WR) + Math.max(0, c.TE - STARTERS.TE);
+    var flexOpen = Math.max(0, STARTERS.FLEX - flexUsed);
+    ['QB','RB','WR','TE'].forEach(function(pos){
+      var open = Math.max(0, (STARTERS[pos]||0) - c[pos]);
+      /* a pick that fills a starter, or a flex-eligible one where flex is open */
+      if (open > 0) need[pos] += 1;
+      else if (flexOpen > 0 && pos !== 'QB') need[pos] += 0.5;
+    });
+  }
+  return { gap: gap, need: need, teams: Object.keys(teamsSeen).length };
+}
+
+/* ---- panel: what the teams ahead of you are hunting ---- */
+function panelOpponents(){
+  var o = opponentNeeds();
+  if (!o || o.gap <= 0) return '';
+  var max = Math.max(1, o.need.QB, o.need.RB, o.need.WR, o.need.TE);
+  var html = '<div class="mine-head">Before your next pick <span class="mine-total">' +
+    o.gap + ' picks \u00b7 ' + o.teams + ' teams</span></div>';
+  html += '<div class="opp-list">';
+  ['RB','WR','TE','QB'].forEach(function(pos){
+    var n = o.need[pos];
+    var w = Math.max(4, Math.round((n / max) * 100));
+    var hot = n >= o.gap * 0.5;
+    html += '<div class="opp-row">' +
+      '<span class="opp-pos" style="color:' + POS_COLOR[pos] + '">' + pos + '</span>' +
+      '<span class="opp-bar"><i style="width:' + w + '%;background:' + (hot ? '#FF6E7E' : '#55C8F5') + '"></i></span>' +
+      '<span class="opp-num">' + (Math.round(n * 10) / 10) + '</span>' +
+      '<span class="sr-only">' + pos + ': about ' + Math.round(n) + ' of the next ' + o.gap + ' picks want this position</span>' +
+      '</div>';
+  });
+  html += '</div>';
+  html += '<div class="mine-foot">Roughly how many of the next ' + o.gap +
+    ' picks are hunting each position, based on what those teams still have to start.</div>';
+  return html;
+}
+
+/* ==================== ON-THE-CLOCK ALERT + SHORTCUTS ==================== */
+var ALERT_ON = true;
+var LAST_ON_CLOCK = null;
+
+function setAlert(on){
+  ALERT_ON = !!on;
+  if (hasStorage()) window.storage.set('alert-v1', ALERT_ON ? '1' : '0').catch(function(){});
+  render();
+}
+function loadAlertPref(){
+  if (!hasStorage()) return;
+  window.storage.get('alert-v1').then(function(r){
+    if (r && r.value != null) { ALERT_ON = r.value !== '0'; render(); }
+  }).catch(function(){});
+}
+
+function beep(){
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    var ctx = new AC();
+    [0, 0.18].forEach(function(t){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = t ? 1046 : 784;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.16);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.18);
+    });
+    setTimeout(function(){ try { ctx.close(); } catch(e){} }, 900);
+  } catch(e){}
+}
+
+function checkClockAlert(){
+  if (picks.length >= TOTAL_PICKS) { LAST_ON_CLOCK = null; return; }
+  var mine = teamOnClock(picks.length + 1) === MY_SLOT;
+  if (mine && LAST_ON_CLOCK === false && ALERT_ON && !mockMode) {
+    beep();
+    try { if (navigator && navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch(e){}
+  }
+  LAST_ON_CLOCK = mine;
+}
+
+/* ---- keyboard shortcuts (desktop) ---- */
+function initShortcuts(){
+  if (typeof document.addEventListener !== 'function') return;
+  document.addEventListener('keydown', function(e){
+    var t = e.target || {};
+    var typing = t.tagName === 'INPUT' || t.tagName === 'TEXTAREA';
+    if (e.key === '/' && !typing) {
+      var si = document.getElementById('search-input');
+      if (si && si.focus) { si.focus(); e.preventDefault(); }
+      return;
+    }
+    if (typing) return;
+    if (e.key === '?') { openShortcuts(); return; }
+    if (e.key === 'q' || e.key === 'Q') { if (currentModalRank) toggleQueue(currentModalRank); return; }
+    if (e.key === 'x' || e.key === 'X') { if (currentModalRank) toggleAvoid(currentModalRank); return; }
+    if (e.key === 'd' || e.key === 'D') {
+      if (currentModalRank && picks.indexOf(currentModalRank) < 0) { draftFromModal(currentModalRank); return; }
+      var s = suggest(1);
+      if (s.length) openPlayer(s[0].p.rank);
+      return;
+    }
+    if (e.key === 'u' || e.key === 'U') { undoPick(); return; }
+    if (/^[1-9]$/.test(e.key)) {
+      var list = suggest(10);
+      var idx = parseInt(e.key, 10) - 1;
+      if (list[idx]) openPlayer(list[idx].p.rank);
+      return;
+    }
+    if (e.key === 't' || e.key === 'T') { setTab('team'); return; }
+    if (e.key === 'b' || e.key === 'B') { setTab('board'); return; }
+  });
+}
+
+function openShortcuts(){
+  var rows = [
+    ['/', 'jump to search'],
+    ['1 \u2013 9', 'open that suggestion'],
+    ['d', 'draft the open player (or open the top pick)'],
+    ['q', 'queue / unqueue the open player'],
+    ['x', 'avoid / un-avoid the open player'],
+    ['u', 'undo the last pick'],
+    ['t', 'my team'], ['b', 'full board'],
+    ['Esc', 'close the top window'], ['?', 'this list']
+  ];
+  var h = '<div class="sl-meta">Keyboard shortcuts work anywhere except inside a text box.</div><div class="keys">';
+  rows.forEach(function(r){
+    h += '<div class="key-row"><kbd>' + esc(r[0]) + '</kbd><span>' + esc(r[1]) + '</span></div>';
+  });
+  h += '</div>';
+  openWindow('win-keys', 'Shortcuts', h, 'player');
+}
+
 function render(){
+  checkClockAlert();
   renderChyron();
   renderView();
   ['draft','team','board','grade'].forEach(function(t){
@@ -2269,6 +2809,11 @@ function render(){
 }
 
 initWindowDrag();
+initShortcuts();
+snapshotDefaultBoard();
+loadSavedBoard();
+loadLists();
+loadAlertPref();
 loadDraft();
 restoreSleeper();
 </script>
