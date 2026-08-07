@@ -307,6 +307,33 @@ body{
 .feed-row.mine{background:#10301F; box-shadow:inset 0 0 0 1px #2C6B4E; border-bottom-color:transparent}
 .feed-name{font-size:14px; font-weight:600}
 
+
+/* ---------- your roster composition ---------- */
+.mine-head{display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-2);
+  font-family:var(--cond); font-weight:700; font-size:12px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--text-3); margin-bottom:var(--sp-2)}
+.mine-total{font-family:var(--mono); font-size:11px; letter-spacing:0; text-transform:none; color:var(--text-3)}
+.mine-strip{display:grid; grid-template-columns:repeat(6,1fr); gap:5px}
+.mine-cell{background:var(--panel-2); border:1px solid var(--line-soft); border-radius:var(--r-sm);
+  padding:7px 2px 6px; text-align:center}
+.mine-pos{font-family:var(--cond); font-weight:700; font-size:11px; letter-spacing:.06em}
+.mine-num{font-family:var(--mono); font-weight:700; font-size:17px; line-height:1.2;
+  font-variant-numeric:tabular-nums; color:var(--text)}
+.mine-state{font-family:var(--cond); font-size:9.5px; font-weight:700; letter-spacing:.07em;
+  text-transform:uppercase; margin-top:1px}
+.mine-state.need{color:var(--amber)}
+.mine-state.set{color:var(--text-3)}
+.mine-state.none{color:var(--text-3)}
+.mine-foot{font-size:11.5px; color:var(--text-3); line-height:1.45; margin:var(--sp-2) 0 var(--sp-4); padding:0 2px}
+
+/* ---------- roster rows ---------- */
+.roster-name{font-size:14px; font-weight:600; line-height:1.3}
+.slot-tag{font-family:var(--cond); font-size:10px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--text-3); background:var(--panel-2);
+  border:1px solid var(--line-soft); border-radius:5px; padding:3px 7px; flex-shrink:0}
+.slot-empty{color:var(--text-3); font-size:14px}
+.roster-row.empty-slot{opacity:.72}
+
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -378,7 +405,7 @@ var NUM_TEAMS = 12, MY_SLOT = 10, ROUNDS = 29;   /* 11 starters + 15 bench + 3 I
 var TOTAL_PICKS = NUM_TEAMS * ROUNDS;
 var STARTERS = { QB:1, RB:2, WR:3, TE:1, FLEX:2, K:1, DST:1 };
 var STARTER_COUNT = 11;   /* overwritten when a Sleeper league is connected */
-var POS_COLOR = { QB:'#ec5f8f', RB:'#6ee7b4', WR:'#5bc0f8', TE:'#f8a94e', K:'#b3a8f7', DST:'#c0705a' };
+var POS_COLOR = { QB:'#F07BA6', RB:'#5FD9A8', WR:'#5BB8F0', TE:'#F0A055', K:'#AFA6F2', DST:'#C77E63' };
 var STORAGE_KEY = 'ff-dynasty-2026-warroom';
 
 /* ===== DYNASTY BOARD: expert dynasty top 240 (PPR) + K/DST appended.
@@ -1422,7 +1449,7 @@ function renderView(){
   document.body.className = wide ? 'wide' : 'narrow';
 
   if (wide) {
-    if (L) L.innerHTML = panelMarket() + panelSuggest();
+    if (L) L.innerHTML = panelMyCounts() + panelMarket() + panelSuggest();
     if (R) R.innerHTML = panelList();
     v.innerHTML = panelControls() + centerContent();
   } else {
@@ -1459,6 +1486,43 @@ function panelControls(){
       (SLEEPER.on ? 'Sleeper live \u00b7 ' + SLEEPER.applied + ' picks' : 'Connect Sleeper') + '</button>' +
     '<button class="mock-start-btn sl-half" onclick="startMock()">Mock draft</button>' +
     '</div>';
+}
+
+/* ---- panel: what you already have ---- */
+function panelMyCounts(){
+  var mine = myPlayers();
+  var counts = needCounts(mine);
+  var slots = slotRoster(mine);
+  var starters = slots.slice(0, STARTER_COUNT);
+  var html = '<div class="mine-head">Your roster <span class="mine-total">' + mine.length + ' picked</span></div>';
+  html += '<div class="mine-strip">';
+  ['QB','RB','WR','TE','K','DST'].forEach(function(pos){
+    var have = counts[pos] || 0;
+    /* how many dedicated starting slots at this position are still empty */
+    var openHere = starters.filter(function(x){ return x.pos === pos && !x.player; }).length;
+    var state, cls;
+    if (openHere > 0) { state = 'need ' + openHere; cls = 'need'; }
+    else if (have === 0) { state = '\u2014'; cls = 'none'; }
+    else { state = 'set'; cls = 'set'; }
+    html += '<div class="mine-cell">' +
+      '<div class="mine-pos" style="color:' + POS_COLOR[pos] + '">' + (pos === 'DST' ? 'DEF' : pos) + '</div>' +
+      '<div class="mine-num">' + have + '</div>' +
+      '<div class="mine-state ' + cls + '">' + state + '</div>' +
+      '<span class="sr-only">' + (pos === 'DST' ? 'Defense' : pos) + ': ' + have + ' rostered' +
+        (openHere > 0 ? ', ' + openHere + ' starting slot' + (openHere===1?'':'s') + ' still open' : ', starters filled') +
+      '</span></div>';
+  });
+  html += '</div>';
+  var openStarters = starters.filter(function(x){ return !x.player; }).length;
+  var flexOpen = starters.filter(function(x){ return !x.player &&
+    (x.pos === 'FLEX' || x.pos === 'SUPERFLEX' || x.pos === 'RECFLEX'); }).length;
+  if (openStarters > 0) {
+    html += '<div class="mine-foot">' + openStarters + ' starting slot' + (openStarters===1?'':'s') + ' still empty' +
+      (flexOpen ? ', including ' + flexOpen + ' flex' : '') + '.</div>';
+  } else if (mine.length) {
+    html += '<div class="mine-foot">Every starting slot is filled \u2014 draft for depth and upside now.</div>';
+  }
+  return html;
 }
 
 /* ---- panel: market depth + scarcity alerts ---- */
@@ -1593,7 +1657,7 @@ function panelFeed(){
 }
 
 function viewDraft(){
-  return panelControls() + panelMarket() + panelSuggest() + panelList();
+  return panelControls() + panelMyCounts() + panelMarket() + panelSuggest() + panelList();
 }
 
 function viewTeam(){
@@ -1637,11 +1701,19 @@ function viewTeam(){
 }
 
 function rosterRow(s){
-  var body = s.player
-    ? '<div class="flex1"><span style="font-weight:700;font-size:14px;">' + esc(s.player.name) + '</span> ' + ageChip(s.player) + ' ' +
-      '<span class="team-tag">' + s.player.team + ' &middot; #' + s.player.rank + '</span></div>'
-    : '<div class="flex1" style="color:#43507c;font-size:14px;">Empty</div>';
-  return '<div class="roster-row">' + badge(s.pos, s.label) + body + '</div>';
+  if (!s.player) {
+    return '<div class="roster-row empty-slot">' + badge(s.pos, s.label) +
+      '<div class="flex1 slot-empty">Empty</div></div>';
+  }
+  /* badge always carries the player's own position, in that position's colour */
+  var mark = badge(s.player.pos);
+  /* slots whose label isn't just the position keep a quiet tag so you still see the shape */
+  var slotTag = (s.label !== s.player.pos)
+    ? '<span class="slot-tag">' + esc(s.label) + '</span>' : '';
+  return '<div class="roster-row">' + mark +
+    '<div class="flex1"><div class="roster-name">' + esc(s.player.name) + ' ' + ageChip(s.player) + '</div>' +
+    '<div class="team-tag">' + s.player.team + ' &middot; #' + s.player.rank + '</div></div>' +
+    slotTag + '</div>';
 }
 
 function viewBoard(){
