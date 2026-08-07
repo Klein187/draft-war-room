@@ -397,6 +397,23 @@ kbd{font-family:var(--mono); font-size:11.5px; font-weight:600; background:var(-
   border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:3px 8px;
   color:var(--text); min-width:52px; text-align:center; flex-shrink:0}
 
+
+/* ---------- traded picks ---------- */
+.trade-form{display:flex; gap:var(--sp-2); margin:var(--sp-3) 0}
+.trade-field{flex:1; display:flex; flex-direction:column; gap:4px}
+.trade-field span{font-family:var(--cond); font-size:10px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--text-3)}
+.trade-sel{width:100%; min-height:var(--tap); background:var(--panel-2); color:var(--text);
+  border:1px solid var(--line); border-radius:var(--r-sm); padding:10px 8px;
+  font-family:var(--sans); font-size:14px; outline:none}
+.trade-sel:focus{border-color:var(--cyan)}
+.trade-row{display:flex; align-items:center; gap:var(--sp-2); padding:8px 0;
+  border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-2)}
+.trade-row b{color:var(--text)}
+.trade-undo{background:var(--panel-2); color:var(--text-2); border:1px solid var(--line);
+  border-radius:6px; padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer;
+  font-family:var(--sans); flex-shrink:0}
+
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -1172,6 +1189,7 @@ function fetchScout(rank, force){
 }
 
 function teamOnClock(overall){
+  if (typeof PICK_OWNER !== 'undefined' && PICK_OWNER[overall]) return PICK_OWNER[overall];
   var round = Math.ceil(overall / NUM_TEAMS);
   var idx = (overall - 1) % NUM_TEAMS;
   if (typeof DRAFT_TYPE !== 'undefined' && DRAFT_TYPE === 'linear') return idx + 1;
@@ -1462,6 +1480,12 @@ function renderChyron(){
   var until = nextMine ? nextMine - currentOverall : null;
   var sub = 'Overall #' + currentOverall + ' &middot; Round ' + round;
   if (!isMine && until !== null) sub += ' &middot; <b>' + until + ' pick' + (until===1?'':'s') + ' until you</b>';
+  if (isMine && currentOverall < TOTAL_PICKS && teamOnClock(currentOverall + 1) === MY_SLOT) {
+    sub += ' &middot; <b>back-to-back \u2014 you pick again next</b>';
+  }
+  if (typeof tradesActive === 'function' && tradesActive() && PICK_OWNER[currentOverall]) {
+    sub += ' &middot; <span style="color:#F0A93C">traded pick</span>';
+  }
   el.innerHTML =
     '<div class="chyron-main"><span class="pick-tag">PICK ' + pickLabel(currentOverall) + '</span>' +
     '<span class="chyron-big">' + (isMine ? 'Your pick' : 'Team ' + onClock + ' is picking') + '</span></div>' +
@@ -1566,6 +1590,8 @@ function panelControls(){
         (BOARD_SOURCE === 'imported' ? ' \u00b7 custom' : '') + '</button>' +
       '<button type="button" class="util-btn' + (ALERT_ON ? ' on' : '') + '" onclick="setAlert(' + (!ALERT_ON) + ')" ' +
         'aria-pressed="' + ALERT_ON + '">Pick alert ' + (ALERT_ON ? 'on' : 'off') + '</button>' +
+      '<button type="button" class="util-btn' + (tradesActive() ? ' on' : '') + '" onclick="openTrades()">Picks' +
+        (tradesActive() ? ' \u00b7 ' + Object.keys(PICK_OWNER).length : '') + '</button>' +
       '<button type="button" class="util-btn" onclick="openShortcuts()">Keys</button>' +
     '</div>';
 }
@@ -1576,7 +1602,9 @@ function panelMyCounts(){
   var counts = needCounts(mine);
   var slots = slotRoster(mine);
   var starters = slots.slice(0, STARTER_COUNT);
-  var html = '<div class="mine-head">Your roster <span class="mine-total">' + mine.length + ' picked</span></div>';
+  var ownedCount = (typeof pickLedger === 'function') ? (pickLedger()[MY_SLOT] || []).length : ROUNDS;
+  var html = '<div class="mine-head">Your roster <span class="mine-total">' + mine.length + ' of ' +
+    ownedCount + ' picks</span></div>';
   html += '<div class="mine-strip">';
   ['QB','RB','WR','TE','K','DST'].forEach(function(pos){
     var have = counts[pos] || 0;
@@ -2199,7 +2227,7 @@ function syncPicks(){
     var mismatch = 0;
     rows.forEach(function(pk, i){
       next.push(sleeperMatch(pk));
-      if (pk.draft_slot && teamOnClock(i+1) !== pk.draft_slot) mismatch++;
+      if (pk.draft_slot && baseTeamOnClock(i+1) !== pk.draft_slot) mismatch++;
     });
     SLEEPER.warn = mismatch > 0
       ? 'Pick order differs from Sleeper on ' + mismatch + ' pick(s) — check the draft type.'
@@ -2279,6 +2307,7 @@ function sleeperPickLeague(leagueId, leagueName){
     applyDraftConfig(d, SLEEPER.userId, reserve);
     SLEEPER.status = 'connected';
     startSync();
+    syncTradedPicks();
     renderSleeperWindow();
   }).catch(function(e){
     SLEEPER.status = 'Error: ' + e.message;
@@ -2295,6 +2324,8 @@ function renderSleeperWindow(){
          '<div class="sl-meta">' + SLEEPER.applied + ' picks synced &middot; ' +
          NUM_TEAMS + ' teams &middot; ' + ROUNDS + ' rounds &middot; you are slot ' + MY_SLOT +
          (SLEEPER.lastSync ? ' &middot; updated ' + SLEEPER.lastSync.toLocaleTimeString() : '') + '</div>';
+    if (SLEEPER.trades) h += '<div class="sl-meta">' + SLEEPER.trades + ' traded pick' +
+      (SLEEPER.trades===1?'':'s') + ' pulled from your league.</div>';
     if (SLEEPER.warn) h += '<div class="sl-warn">' + esc(SLEEPER.warn) + '</div>';
     if (SLEEPER.unmatched.length) h += '<div class="sl-meta">Not on the board (added automatically): ' +
       esc(SLEEPER.unmatched.slice(-6).join(', ')) + '</div>';
@@ -2334,6 +2365,7 @@ function restoreSleeper(){
         sleeperGet('/draft/' + c.draftId).then(function(d){
           applyDraftConfig(d, SLEEPER.userId, 0);
           startSync();
+          syncTradedPicks();
         }).catch(function(){ SLEEPER.status='' ; });
       }
     } catch(e){}
@@ -2785,6 +2817,175 @@ function openShortcuts(){
   openWindow('win-keys', 'Shortcuts', h, 'player');
 }
 
+
+/* ==================== TRADED DRAFT PICKS ==================== */
+/* PICK_OWNER maps an overall pick number to the team that now owns it.
+   Anything absent follows the normal snake/linear order. */
+var PICK_OWNER = {};
+
+/* the untraded owner of a pick — pure order math */
+function baseTeamOnClock(overall){
+  var round = Math.ceil(overall / NUM_TEAMS);
+  var idx = (overall - 1) % NUM_TEAMS;
+  if (typeof DRAFT_TYPE !== 'undefined' && DRAFT_TYPE === 'linear') return idx + 1;
+  return round % 2 === 1 ? idx + 1 : NUM_TEAMS - idx;
+}
+
+/* which overall pick is round R, original slot S? */
+function pickNumberFor(round, slot){
+  if (round < 1 || round > ROUNDS || slot < 1 || slot > NUM_TEAMS) return null;
+  if (typeof DRAFT_TYPE !== 'undefined' && DRAFT_TYPE === 'linear') {
+    return (round - 1) * NUM_TEAMS + slot;
+  }
+  return round % 2 === 1
+    ? (round - 1) * NUM_TEAMS + slot
+    : (round - 1) * NUM_TEAMS + (NUM_TEAMS - slot + 1);
+}
+
+function tradesActive(){ for (var k in PICK_OWNER) return true; return false; }
+
+function setPickOwner(overall, slot){
+  if (!overall || !slot) return;
+  if (slot === baseTeamOnClock(overall)) delete PICK_OWNER[overall];
+  else PICK_OWNER[overall] = slot;
+  saveTrades();
+}
+function clearPickOwner(overall){ delete PICK_OWNER[overall]; saveTrades(); }
+function clearAllTrades(){ PICK_OWNER = {}; saveTrades(); render(); renderTradeWindow(); }
+
+function saveTrades(){
+  if (!hasStorage()) return;
+  window.storage.set('trades-v1', JSON.stringify(PICK_OWNER)).catch(function(){});
+}
+function loadTrades(){
+  if (!hasStorage()) return;
+  window.storage.get('trades-v1').then(function(r){
+    if (!r || !r.value) return;
+    try {
+      var d = JSON.parse(r.value);
+      if (d && typeof d === 'object') { PICK_OWNER = d; render(); }
+    } catch(e){}
+  }).catch(function(){});
+}
+
+/* how many picks each team owns, and which rounds are mine */
+function pickLedger(){
+  var owned = {};
+  for (var t = 1; t <= NUM_TEAMS; t++) owned[t] = [];
+  for (var p = 1; p <= TOTAL_PICKS; p++) owned[teamOnClock(p)].push(p);
+  return owned;
+}
+
+/* ---- trade window ---- */
+var TRADE_FORM = { round: 1, from: null, to: null };
+
+function openTrades(){
+  if (TRADE_FORM.from == null) TRADE_FORM.from = MY_SLOT;
+  if (TRADE_FORM.to == null) TRADE_FORM.to = MY_SLOT === 1 ? 2 : 1;
+  renderTradeWindow();
+}
+function tradeSet(field, val){
+  TRADE_FORM[field] = parseInt(val, 10);
+  renderTradeWindow();
+}
+function tradeApply(){
+  var overall = pickNumberFor(TRADE_FORM.round, TRADE_FORM.from);
+  if (!overall) return;
+  if (overall <= picks.length) { TRADE_FORM.err = 'That pick has already been made.'; renderTradeWindow(); return; }
+  TRADE_FORM.err = null;
+  setPickOwner(overall, TRADE_FORM.to);
+  render();
+  renderTradeWindow();
+}
+
+function renderTradeWindow(){
+  var ledger = pickLedger();
+  var mine = ledger[MY_SLOT] || [];
+  var h = '';
+  h += '<div class="sl-meta">Moved a pick in a trade? Reassign it here and every countdown, ' +
+       'suggestion and grade follows the new order.</div>';
+
+  h += '<div class="trade-form">';
+  h += '<label class="trade-field"><span>Round</span><select class="trade-sel" onchange="tradeSet(\'round\',this.value)">';
+  for (var r = 1; r <= ROUNDS; r++) {
+    h += '<option value="' + r + '"' + (TRADE_FORM.round === r ? ' selected' : '') + '>' + r + '</option>';
+  }
+  h += '</select></label>';
+  h += '<label class="trade-field"><span>Originally</span><select class="trade-sel" onchange="tradeSet(\'from\',this.value)">';
+  for (var a = 1; a <= NUM_TEAMS; a++) {
+    h += '<option value="' + a + '"' + (TRADE_FORM.from === a ? ' selected' : '') + '>Team ' + a + (a === MY_SLOT ? ' (you)' : '') + '</option>';
+  }
+  h += '</select></label>';
+  h += '<label class="trade-field"><span>Now owned by</span><select class="trade-sel" onchange="tradeSet(\'to\',this.value)">';
+  for (var b = 1; b <= NUM_TEAMS; b++) {
+    h += '<option value="' + b + '"' + (TRADE_FORM.to === b ? ' selected' : '') + '>Team ' + b + (b === MY_SLOT ? ' (you)' : '') + '</option>';
+  }
+  h += '</select></label>';
+  h += '</div>';
+  var preview = pickNumberFor(TRADE_FORM.round, TRADE_FORM.from);
+  if (preview) {
+    h += '<div class="sl-meta">That is pick <b>' + pickLabel(preview) + '</b> (overall #' + preview + ').</div>';
+  }
+  if (TRADE_FORM.err) h += '<div class="sl-warn">' + esc(TRADE_FORM.err) + '</div>';
+  h += '<button class="sl-btn" onclick="tradeApply()">Move this pick</button>';
+
+  var keys = Object.keys(PICK_OWNER).map(Number).sort(function(x,y){ return x-y; });
+  h += '<div class="mine-head" style="margin-top:18px">Traded picks <span class="mine-total">' + keys.length + '</span></div>';
+  if (!keys.length) {
+    h += '<div class="sl-meta">None yet \u2014 the draft is running in normal order.</div>';
+  } else {
+    keys.forEach(function(ov){
+      var to = PICK_OWNER[ov], from = baseTeamOnClock(ov);
+      h += '<div class="trade-row">' +
+        '<span class="board-pick">' + pickLabel(ov) + '</span>' +
+        '<span class="flex1">Team ' + from + ' \u2192 <b>Team ' + to + (to === MY_SLOT ? ' (you)' : '') + '</b></span>' +
+        '<button type="button" class="trade-undo" onclick="clearPickOwner(' + ov + ');render();renderTradeWindow()">Undo</button>' +
+        '</div>';
+    });
+    h += '<button class="sl-btn sl-stop" onclick="clearAllTrades()">Clear all trades</button>';
+  }
+
+  h += '<div class="mine-head" style="margin-top:18px">Your picks <span class="mine-total">' + mine.length + ' of ' + ROUNDS + '</span></div>';
+  h += '<div class="sl-meta">' + (mine.length
+    ? mine.map(function(p){ return pickLabel(p); }).join(' \u00b7 ')
+    : 'You do not own any picks.') + '</div>';
+
+  openWindow('win-trades', 'Traded picks', h, 'research');
+}
+
+/* ---- pull trades straight from Sleeper ---- */
+function syncTradedPicks(){
+  if (!SLEEPER.leagueId || !SLEEPER.draftId) return;
+  var rosterSlot = {};
+  sleeperGet('/league/' + SLEEPER.leagueId + '/rosters').then(function(rosters){
+    return sleeperGet('/draft/' + SLEEPER.draftId).then(function(draft){
+      var order = (draft && draft.draft_order) || {};
+      (rosters || []).forEach(function(r){
+        if (r && r.roster_id && r.owner_id && order[r.owner_id]) rosterSlot[r.roster_id] = order[r.owner_id];
+      });
+      return sleeperGet('/league/' + SLEEPER.leagueId + '/traded_picks');
+    });
+  }).then(function(tp){
+    if (!Array.isArray(tp)) return;
+    var season = String(new Date().getFullYear());
+    var applied = 0;
+    tp.forEach(function(t){
+      if (t.season && String(t.season) !== season) return;
+      var origSlot = rosterSlot[t.roster_id];
+      var newSlot = rosterSlot[t.owner_id];
+      if (!origSlot || !newSlot || origSlot === newSlot) return;
+      var ov = pickNumberFor(t.round, origSlot);
+      if (!ov) return;
+      if (newSlot === baseTeamOnClock(ov)) delete PICK_OWNER[ov];
+      else PICK_OWNER[ov] = newSlot;
+      applied++;
+    });
+    SLEEPER.trades = applied;
+    saveTrades();
+    render();
+  }).catch(function(){ /* league may not expose traded picks */ });
+}
+
 function render(){
   checkClockAlert();
   renderChyron();
@@ -2810,6 +3011,7 @@ function render(){
 
 initWindowDrag();
 initShortcuts();
+loadTrades();
 snapshotDefaultBoard();
 loadSavedBoard();
 loadLists();
