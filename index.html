@@ -258,6 +258,55 @@ body{
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
   clip:rect(0,0,0,0); white-space:nowrap; border:0}
 
+
+/* ---------- layout: single column on phones, three columns on desktop ---------- */
+.grid{display:block}
+.col-head{display:none}
+.col-body{min-height:0}
+
+@media (min-width:1000px){
+  body{max-width:1500px; height:100vh; display:flex; flex-direction:column;
+       padding:0 var(--sp-4); overflow:hidden}
+  .topbar{position:static; padding-top:var(--sp-4)}
+  .grid{display:grid; grid-template-columns:352px minmax(0,1fr) 380px; gap:var(--sp-4);
+        flex:1; min-height:0; padding-bottom:var(--sp-4)}
+  .col{display:flex; flex-direction:column; min-height:0; min-width:0;
+       background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--r-lg); overflow:hidden}
+  .col-head{display:block; font-family:var(--cond); font-weight:700; font-size:12px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--text-3);
+    padding:12px var(--sp-4) 10px; border-bottom:1px solid var(--line-soft);
+    background:var(--panel-2); flex-shrink:0}
+  .col-body{flex:1; overflow-y:auto; overscroll-behavior:contain;
+    padding:var(--sp-4); scrollbar-width:thin; scrollbar-color:var(--line) transparent}
+  .col-body::-webkit-scrollbar{width:10px}
+  .col-body::-webkit-scrollbar-track{background:transparent}
+  .col-body::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;
+    border:3px solid var(--panel)}
+  .col-body::-webkit-scrollbar-thumb:hover{background:#31456B}
+
+  /* panels sit flush inside their column */
+  .col-left .market-strip{margin-top:0}
+  .col-left .suggest-card{margin-bottom:0; border:none; background:transparent}
+  .col-left .suggest-head{display:none}
+  .col-left .suggest-row{border-radius:var(--r-sm); border-top:1px solid var(--line-soft)}
+  .col-right .search{position:sticky; top:0; z-index:2}
+  .col-right .chip-row{position:sticky; top:56px; z-index:2; background:var(--panel);
+    padding:6px 0 8px; margin-bottom:0}
+  .footer{display:none}
+  .section-label:first-child{margin-top:0}
+  .grade-hero{padding-top:var(--sp-3)}
+}
+
+@media (min-width:1000px) and (max-width:1200px){
+  .grid{grid-template-columns:320px minmax(0,1fr) 330px; gap:var(--sp-3)}
+}
+
+/* ---------- live pick feed ---------- */
+.feed-row{display:flex; align-items:center; gap:var(--sp-3); padding:8px 6px; min-height:40px;
+  border-bottom:1px solid var(--line-soft); border-radius:var(--r-sm)}
+.feed-row.mine{background:#10301F; box-shadow:inset 0 0 0 1px #2C6B4E; border-bottom-color:transparent}
+.feed-name{font-size:14px; font-weight:600}
+
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -306,8 +355,19 @@ window.CLAUDE_PROXY = null;
   <button class="tab-btn undo" id="undo-btn" onclick="undoPick()">Undo</button>
 </nav>
 </header>
-<main id="view-main">
-<div id="view"></div>
+<main id="view-main" class="grid">
+  <section class="col col-left" aria-label="Best available">
+    <div class="col-head">Best available</div>
+    <div id="col-left" class="col-body"></div>
+  </section>
+  <section class="col col-center" aria-label="Draft detail">
+    <div class="col-head" id="center-head">Draft</div>
+    <div id="view" class="col-body"></div>
+  </section>
+  <section class="col col-right" aria-label="All players">
+    <div class="col-head">All players</div>
+    <div id="col-right" class="col-body"></div>
+  </section>
 </main>
 <div id="modal"></div>
 <div id="windows"></div>
@@ -1273,7 +1333,13 @@ function undoPick(){
 function askReset(){ confirmingReset = true; render(); }
 function cancelReset(){ confirmingReset = false; render(); }
 function doReset(){ picks = []; confirmingReset = false; saveDraft(); render(); }
-function onSearch(el){ search = el.value; renderView(); }
+function onSearch(el){
+  search = el.value;
+  var R = isWide() ? document.getElementById('col-right') : null;
+  if (R) { R.innerHTML = panelList(); var si = document.getElementById('search-input');
+           if (si) { si.value = search; if (si.focus) si.focus(); } }
+  else renderView();
+}
 function setPos(pos){ posFilter = pos; render(); }
 
 function badge(pos, label){
@@ -1340,92 +1406,135 @@ function viewGrade(){
   return html;
 }
 
+function centerContent(){
+  if (tab === 'grade') return viewGrade();
+  if (tab === 'team')  return viewTeam();
+  if (tab === 'board') return viewBoard();
+  return isWide() ? panelFeed() : viewDraft();
+}
+
 function renderView(){
   var v = document.getElementById('view');
-  if (tab === 'grade') v.innerHTML = viewGrade();
-  else if (tab === 'draft') v.innerHTML = viewDraft();
-  else if (tab === 'team') v.innerHTML = viewTeam();
-  else v.innerHTML = viewBoard();
+  var L = document.getElementById('col-left');
+  var R = document.getElementById('col-right');
+  var head = document.getElementById('center-head');
+  var wide = isWide();
+  document.body.className = wide ? 'wide' : 'narrow';
+
+  if (wide) {
+    if (L) L.innerHTML = panelMarket() + panelSuggest();
+    if (R) R.innerHTML = panelList();
+    v.innerHTML = panelControls() + centerContent();
+  } else {
+    if (L) L.innerHTML = '';
+    if (R) R.innerHTML = '';
+    v.innerHTML = (tab === 'draft') ? viewDraft() : (panelControls() + centerContent());
+  }
+  if (head) head.textContent = tab === 'team' ? 'My team'
+    : tab === 'board' ? 'Full board' : tab === 'grade' ? 'Draft grade' : 'Live picks';
   var si = document.getElementById('search-input');
   if (si) si.value = search;
 }
 
-function viewDraft(){
+/* keep the layout honest when the window changes size */
+var _resizeT = null;
+function onResizeLayout(){
+  if (_resizeT) clearTimeout(_resizeT);
+  _resizeT = setTimeout(function(){ render(); }, 150);
+}
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('resize', onResizeLayout);
+}
+
+function isWide(){ return (window.innerWidth || 0) >= 1000; }
+
+/* ---- panel: draft controls (Sleeper / mock) ---- */
+function panelControls(){
+  if (mockMode) {
+    return '<div class="mock-banner"><div class="mock-banner-txt">Mock draft in progress. The other 11 teams pick automatically \u2014 your real draft is saved.</div>' +
+      '<button class="mock-exit" onclick="exitMock()">Exit</button></div>';
+  }
+  return '<div class="sl-row">' +
+    '<button class="sl-connect' + (SLEEPER.on ? ' live' : '') + '" onclick="openSleeper()">' +
+      (SLEEPER.on ? 'Sleeper live \u00b7 ' + SLEEPER.applied + ' picks' : 'Connect Sleeper') + '</button>' +
+    '<button class="mock-start-btn sl-half" onclick="startMock()">Mock draft</button>' +
+    '</div>';
+}
+
+/* ---- panel: market depth + scarcity alerts ---- */
+function panelMarket(){
+  if (picks.length >= TOTAL_PICKS) return '';
+  var mkt = marketState();
+  var myCounts = needCounts(myPlayers());
+  var html = '<div class="market-strip">';
+  ['QB','RB','WR','TE'].forEach(function(pos){
+    var st = mkt[pos];
+    var status, col;
+    if (st.tierLeft === 0) { status = 'GONE'; col = '#FF6E7E'; }
+    else if (st.supply === 0) { status = 'BARE'; col = '#FF6E7E'; }
+    else if (st.pressure >= 1) { status = 'SCARCE'; col = '#FF6E7E'; }
+    else if (st.pressure >= 0.6) { status = 'TIGHT'; col = '#F0A93C'; }
+    else if (st.pressure >= 0.3) { status = 'OK'; col = '#55C8F5'; }
+    else { status = 'DEEP'; col = '#46D39A'; }
+    var fill = Math.max(6, Math.min(100, Math.round((st.tierLeft / 8) * 100)));
+    html += '<div class="market-cell">' +
+      '<div class="market-pos" style="color:' + POS_COLOR[pos] + '">' + pos + '</div>' +
+      '<div class="market-num" style="color:' + col + '">' + st.tierLeft + '</div>' +
+      '<div class="market-lbl" style="color:' + col + '">' + status + '</div>' +
+      '<div class="depth"><i style="width:' + fill + '%;background:' + col + '"></i></div>' +
+      '<span class="sr-only">' + pos + ': ' + st.tierLeft + ' left in the current tier, ' + status + '</span>' +
+      '</div>';
+  });
+  html += '</div>';
+  html += '<div class="market-caption">Players left in the top tier still on the board. ' +
+    '<b style="color:#FF6E7E">Scarce</b> means that tier runs out before your next pick; ' +
+    '<b style="color:#46D39A">Deep</b> means you can wait.</div>';
+  var alerts = [];
+  ['RB','WR','TE','QB'].forEach(function(pos){
+    var st = mkt[pos];
+    var short = STARTERS[pos] - myCounts[pos];
+    if (short > 0 && st.supply === 0 && st.bestName) {
+      alerts.push(pos + ' cupboard is bare \u2014 best left is ' + st.bestName + ' (#' + st.bestRank + '), only the ' + (st.bestIdx + 1) + 'th-best player on the board. Take value elsewhere and circle back.');
+    } else if (short > 0 && st.pressure >= 0.6) {
+      alerts.push('You still need ' + short + ' ' + pos + (short===1?'':'s') + ' and only ' + st.tierLeft + ' Tier ' + st.topTier + ' ' + pos + (st.tierLeft===1?' remains':'s remain') + ' \u2014 likely gone in the ' + st.gap + ' picks before your next turn.');
+    } else if (st.run >= 6 && st.recentTotal >= 8 && short > 0) {
+      alerts.push(pos + ' run in progress \u2014 ' + st.run + ' of the last ' + st.recentTotal + ' picks. Get ahead of it.');
+    } else if (short > 0 && myCounts[pos] + 1.5 <= st.leagueAvg) {
+      alerts.push('You\u0027re behind the league at ' + pos + ' (you ' + myCounts[pos] + ', league average ' + st.leagueAvg.toFixed(1) + ').');
+    }
+  });
+  alerts.slice(0, 2).forEach(function(a){ html += '<div class="market-note">' + esc(a) + '</div>'; });
+  return html;
+}
+
+/* ---- panel: the ten best picks right now ---- */
+function panelSuggest(){
+  if (picks.length >= TOTAL_PICKS) return '<div class="empty">Draft complete.</div>';
+  var onClock = teamOnClock(picks.length + 1);
+  var isMine = onClock === MY_SLOT;
+  var sugg = suggest(10);
+  var html = '<div class="suggest-card"><div class="suggest-head">' +
+    (isMine ? 'Best picks for you' : 'Best available') + '</div>';
+  sugg.forEach(function(s, i){
+    var p = s.p;
+    html += '<button type="button" class="suggest-row" onclick="openPlayer(' + p.rank + ')" ' +
+      'aria-label="' + esc(p.name) + ', ' + p.pos + ' ' + p.team + ', dynasty rank ' + p.rank + '. Open player card.">' +
+      '<div class="sug-num">' + (i + 1) + '</div>' + badge(p.pos) +
+      '<div class="flex1"><div class="suggest-name">' +
+      (i === 0 && isMine ? '<span class="star">\u2605</span> ' : '') +
+      esc(p.name) + ' ' + ageChip(p) + ' <span class="team-tag">' + p.team + ' &middot; #' + p.rank + '</span></div>' +
+      (s.reasons.length ? '<div class="reason">' + esc(s.reasons.slice(0,2).join(' \u00b7 ')) + '</div>' : '') +
+      '</div><span class="hint" aria-hidden="true">INFO</span></button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* ---- panel: searchable full board ---- */
+function panelList(){
   var done = picks.length >= TOTAL_PICKS;
   var onClock = done ? null : teamOnClock(picks.length + 1);
-  var isMine = onClock === MY_SLOT;
-  var html = '';
-  if (mockMode) {
-    html += '<div class="mock-banner"><div class="mock-banner-txt">Mock draft in progress. The other 11 teams pick automatically \u2014 your real draft is saved.</div>' +
-      '<button class="mock-exit" onclick="exitMock()">Exit</button></div>';
-  } else {
-    html += '<div class="sl-row">' +
-      '<button class="sl-connect' + (SLEEPER.on ? ' live' : '') + '" onclick="openSleeper()">' +
-        (SLEEPER.on ? 'Sleeper live \u00b7 ' + SLEEPER.applied + ' picks' : 'Connect Sleeper') + '</button>' +
-      '<button class="mock-start-btn sl-half" onclick="startMock()">Mock draft</button>' +
-      '</div>';
-  }
-  if (!done) {
-    var mkt = marketState();
-    var myCounts = needCounts(myPlayers());
-    /* market strip: quality players left at each position + plain-language status */
-    html += '<div class="market-strip">';
-    ['QB','RB','WR','TE'].forEach(function(pos){
-      var st = mkt[pos];
-      var status, col;
-      if (st.tierLeft === 0) { status = 'GONE'; col = '#f4778a'; }
-      else if (st.supply === 0) { status = 'BARE'; col = '#f4778a'; }
-      else if (st.pressure >= 1) { status = 'SCARCE'; col = '#f4778a'; }
-      else if (st.pressure >= 0.6) { status = 'TIGHT'; col = '#f8a94e'; }
-      else if (st.pressure >= 0.3) { status = 'OK'; col = '#5bc0f8'; }
-      else { status = 'DEEP'; col = '#6ee7b4'; }
-      var fill = Math.max(6, Math.min(100, Math.round((st.tierLeft / 8) * 100)));
-      html += '<div class="market-cell">' +
-        '<div class="market-pos" style="color:' + POS_COLOR[pos] + '">' + pos + '</div>' +
-        '<div class="market-num" style="color:' + col + '">' + st.tierLeft + '</div>' +
-        '<div class="market-lbl" style="color:' + col + '">' + status + '</div>' +
-        '<div class="depth"><i style="width:' + fill + '%;background:' + col + '"></i></div>' +
-        '<span class="sr-only">' + pos + ': ' + st.tierLeft + ' left in the current tier, ' + status + '</span>' +
-        '</div>';
-    });
-    html += '</div>';
-    html += '<div class="market-caption">Players left in the top tier still on the board. ' +
-      '<b style="color:#FF6E7E">Scarce</b> means that tier runs out before your next pick; ' +
-      '<b style="color:#46D39A">Deep</b> means you can wait.</div>';
-    /* explicit alerts for squeezes and runs at positions I still need */
-    var alerts = [];
-    ['RB','WR','TE','QB'].forEach(function(pos){
-      var st = mkt[pos];
-      var short = STARTERS[pos] - myCounts[pos];
-      if (short > 0 && st.supply === 0 && st.bestName) {
-        alerts.push(pos + ' cupboard is bare \u2014 best left is ' + st.bestName + ' (#' + st.bestRank + '), only the ' + (st.bestIdx + 1) + 'th-best player on the board. Take value elsewhere and circle back.');
-      } else if (short > 0 && st.pressure >= 0.6) {
-        alerts.push('You still need ' + short + ' ' + pos + (short===1?'':'s') + ' and only ' + st.tierLeft + ' Tier ' + st.topTier + ' ' + pos + (st.tierLeft===1?' remains':'s remain') + ' \u2014 likely gone in the ' + st.gap + ' picks before your next turn.');
-      } else if (st.run >= 6 && st.recentTotal >= 8 && short > 0) {
-        alerts.push(pos + ' run in progress \u2014 ' + st.run + ' of the last ' + st.recentTotal + ' picks. Get ahead of it.');
-      } else if (short > 0 && myCounts[pos] + 1.5 <= st.leagueAvg) {
-        alerts.push('You\u0027re behind the league at ' + pos + ' (you ' + myCounts[pos] + ', league average ' + st.leagueAvg.toFixed(1) + ').');
-      }
-    });
-    alerts.slice(0, 2).forEach(function(a){ html += '<div class="market-note">' + esc(a) + '</div>'; });
-
-    var sugg = suggest(10);
-    html += '<div class="suggest-card"><div class="suggest-head">' +
-      (isMine ? 'Best picks for you' : 'Best available') + '</div>';
-    sugg.forEach(function(s, i){
-      var p = s.p;
-      html += '<button type="button" class="suggest-row" onclick="openPlayer(' + p.rank + ')" ' +
-        'aria-label="' + esc(p.name) + ', ' + p.pos + ' ' + p.team + ', dynasty rank ' + p.rank + '. Open player card.">' +
-        '<div class="sug-num">' + (i + 1) + '</div>' + badge(p.pos) +
-        '<div class="flex1"><div class="suggest-name">' +
-        (i === 0 && isMine ? '<span class="star">\u2605</span> ' : '') +
-        esc(p.name) + ' ' + ageChip(p) + ' <span class="team-tag">' + p.team + ' &middot; #' + p.rank + '</span></div>' +
-        (s.reasons.length ? '<div class="reason">' + esc(s.reasons.slice(0,2).join(' \u00b7 ')) + '</div>' : '') +
-        '</div><span class="hint" aria-hidden="true">INFO</span></button>';
-    });
-    html += '</div>';
-  }
-  html += '<input id="search-input" class="search" placeholder="Search player or team\u2026" oninput="onSearch(this)">';
+  var html = '<input id="search-input" class="search" placeholder="Search player or team\u2026" oninput="onSearch(this)" aria-label="Search players">';
   html += '<div class="chip-row">';
   ['ALL','QB','RB','WR','TE','K','DST'].forEach(function(pos){
     html += '<button type="button" class="chip" aria-pressed="' + (posFilter === pos) + '" ' +
@@ -1433,13 +1542,14 @@ function viewDraft(){
   });
   html += '</div>';
   var q = search.trim().toLowerCase();
-  var list = available().filter(function(p){
+  var all = available().filter(function(p){
     if (posFilter !== 'ALL' && p.pos !== posFilter) return false;
     if (q && p.name.toLowerCase().indexOf(q) < 0 && p.team.toLowerCase().indexOf(q) < 0) return false;
     return true;
-  }).slice(0, 40);
+  });
+  var list = all.slice(0, isWide() ? 200 : 40);
   if (!list.length) {
-    html += '<div class="empty">No available players match. Clear the search or filter.</div>';
+    html += '<div class="empty">No players match. Clear the search or filter.</div>';
   } else {
     list.forEach(function(p){
       var pr = PROJ[p.rank];
@@ -1455,8 +1565,35 @@ function viewDraft(){
         '</div></div>' +
         '<span class="hint" aria-hidden="true">' + (done ? '' : '\u2192 T' + onClock) + '</span></button>';
     });
+    if (all.length > list.length) {
+      html += '<div class="empty">' + (all.length - list.length) + ' more \u2014 refine your search to see them.</div>';
+    }
   }
   return html;
+}
+
+/* ---- panel: live pick feed (centre column on the Draft tab) ---- */
+function panelFeed(){
+  if (!picks.length) {
+    return '<div class="empty">No picks logged yet.<br>Connect Sleeper to sync automatically, or tap a player to record a pick.</div>';
+  }
+  var html = '<div class="section-label">Latest picks</div>';
+  var startAt = Math.max(0, picks.length - 25);
+  for (var i = picks.length - 1; i >= startAt; i--) {
+    var p = BY_RANK[picks[i]];
+    var t = teamOnClock(i + 1);
+    var mine = t === MY_SLOT;
+    html += '<div class="feed-row' + (mine ? ' mine' : '') + '">' +
+      '<span class="board-pick">' + pickLabel(i + 1) + '</span>' + badge(p.pos) +
+      '<span class="flex1 feed-name">' + esc(p.name) + '</span>' +
+      '<span class="team-tag"' + (mine ? ' style="color:#8CEFC0"' : '') + '>' + (mine ? 'YOU' : 'T' + t) + '</span>' +
+      '</div>';
+  }
+  return html;
+}
+
+function viewDraft(){
+  return panelControls() + panelMarket() + panelSuggest() + panelList();
 }
 
 function viewTeam(){
