@@ -88,6 +88,17 @@ body { font-family: 'Inter', system-ui, sans-serif; background: #070b1c; color: 
 .mock-banner { background: #2a1c3f; border: 1px solid #6b4ba8; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
 .mock-banner-txt { flex: 1; font-size: 13px; font-weight: 700; color: #c9b3f5; }
 .mock-exit { background: #1a1030; color: #a58ae0; border: 1px solid #6b4ba8; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.sl-row { display: flex; gap: 6px; margin-bottom: 12px; }
+.sl-connect { flex: 1; background: #10243a; color: #64d2ff; border: 1px solid #1d5a80; border-radius: 12px; padding: 14px 8px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: 'Inter', sans-serif; }
+.sl-connect.live { background: #123c26; color: #6ee7b4; border-color: #2b7a63; }
+.sl-half { flex: 1; margin-bottom: 0 !important; }
+.sl-live { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 19px; color: #6ee7b4; margin-bottom: 4px; }
+.sl-meta { font-size: 12px; color: #8fa0cf; line-height: 1.45; margin: 6px 0; }
+.sl-warn { font-size: 12px; color: #f8a94e; background: #241a10; border: 1px solid #3a2f1c; border-radius: 8px; padding: 8px; margin: 8px 0; line-height: 1.4; }
+.sl-btn { width: 100%; background: #10243a; color: #64d2ff; border: 1px solid #1d5a80; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; font-family: 'Inter', sans-serif; }
+.sl-btn.sl-stop { background: #2a1416; color: #f4778a; border-color: #6b2f38; }
+.sl-league { display: block; width: 100%; text-align: left; background: #101832; color: #e6ebfa; border: 1px solid #1c2750; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 6px; font-family: 'Inter', sans-serif; }
+.sl-sub { font-size: 11px; color: #5d6b96; font-weight: 600; }
 .mock-start-btn { width: 100%; background: linear-gradient(135deg,#6b4ba8,#8f5fd6); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: 'Inter', sans-serif; margin-bottom: 12px; }
 .grade-hero { text-align: center; padding: 18px 0 10px; }
 .grade-letter { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 84px; line-height: .95; }
@@ -173,6 +184,7 @@ window.CLAUDE_PROXY = null;
 var NUM_TEAMS = 12, MY_SLOT = 10, ROUNDS = 29;   /* 11 starters + 15 bench + 3 IR */
 var TOTAL_PICKS = NUM_TEAMS * ROUNDS;
 var STARTERS = { QB:1, RB:2, WR:3, TE:1, FLEX:2, K:1, DST:1 };
+var STARTER_COUNT = 11;   /* overwritten when a Sleeper league is connected */
 var POS_COLOR = { QB:'#ec5f8f', RB:'#6ee7b4', WR:'#5bc0f8', TE:'#f8a94e', K:'#b3a8f7', DST:'#c0705a' };
 var STORAGE_KEY = 'ff-dynasty-2026-warroom';
 
@@ -309,7 +321,14 @@ P(376,"Harrison Butker","K","KC",31,12),P(377,"Jason Myers","K","SEA",35,12),P(3
 P(379,"Texans D/ST","DST","HOU",0,12),P(380,"Broncos D/ST","DST","DEN",0,12),P(381,"Seahawks D/ST","DST","SEA",0,12),
 P(382,"Rams D/ST","DST","LAR",0,12),P(383,"Steelers D/ST","DST","PIT",0,12),P(384,"Chargers D/ST","DST","LAC",0,12),
 P(385,"Patriots D/ST","DST","NE",0,12),P(386,"Eagles D/ST","DST","PHI",0,12),P(387,"Vikings D/ST","DST","MIN",0,12),
-P(388,"Packers D/ST","DST","GB",0,12),P(389,"Ravens D/ST","DST","BAL",0,12),P(390,"Bills D/ST","DST","BUF",0,12)
+P(388,"Packers D/ST","DST","GB",0,12),P(389,"Ravens D/ST","DST","BAL",0,12),P(390,"Bills D/ST","DST","BUF",0,12),
+P(391,"Cardinals D/ST","DST","ARI",0,12),P(392,"Falcons D/ST","DST","ATL",0,12),P(393,"Panthers D/ST","DST","CAR",0,12),
+P(394,"Bears D/ST","DST","CHI",0,12),P(395,"Bengals D/ST","DST","CIN",0,12),P(396,"Browns D/ST","DST","CLE",0,12),
+P(397,"Cowboys D/ST","DST","DAL",0,12),P(398,"Lions D/ST","DST","DET",0,12),P(399,"Colts D/ST","DST","IND",0,12),
+P(400,"Jaguars D/ST","DST","JAX",0,12),P(401,"Chiefs D/ST","DST","KC",0,12),P(402,"Raiders D/ST","DST","LV",0,12),
+P(403,"Dolphins D/ST","DST","MIA",0,12),P(404,"Saints D/ST","DST","NO",0,12),P(405,"Giants D/ST","DST","NYG",0,12),
+P(406,"Jets D/ST","DST","NYJ",0,12),P(407,"49ers D/ST","DST","SF",0,12),P(408,"Buccaneers D/ST","DST","TB",0,12),
+P(409,"Titans D/ST","DST","TEN",0,12),P(410,"Commanders D/ST","DST","WSH",0,12)
 ];
 var BY_RANK = {};
 var posCounter = {};
@@ -758,7 +777,7 @@ function gradeMock(){
   var mine = myPlayers();
   var counts = needCounts(mine);
   var slots = slotRoster(mine);
-  var emptyStarters = slots.slice(0, 11).filter(function(s){ return !s.player; }).length;
+  var emptyStarters = slots.slice(0, STARTER_COUNT).filter(function(s){ return !s.player; }).length;
   var skill = mine.filter(function(x){ return x.pos !== 'K' && x.pos !== 'DST'; });
   var avgAge = skill.length ? skill.reduce(function(a,x){ return a + x.age; }, 0) / skill.length : 0;
   var elites = mine.filter(function(x){ return x.rank <= 24; }).length;
@@ -870,6 +889,7 @@ function fetchScout(rank, force){
 function teamOnClock(overall){
   var round = Math.ceil(overall / NUM_TEAMS);
   var idx = (overall - 1) % NUM_TEAMS;
+  if (typeof DRAFT_TYPE !== 'undefined' && DRAFT_TYPE === 'linear') return idx + 1;
   return round % 2 === 1 ? idx + 1 : NUM_TEAMS - idx;
 }
 function pickLabel(overall){
@@ -905,7 +925,7 @@ function ageClass(p){
   return p.age <= 24 ? 'age-young' : (p.age >= 30 ? 'age-old' : 'age-mid'); /* WR/TE/K */
 }
 function ageChip(p){
-  if (p.pos === 'DST') return '';
+  if (p.pos === 'DST' || !p.age) return '';
   var cls = ageClass(p);
   return '<span class="age-chip ' + cls + '">' + p.age + (p.rookie ? ' R' : '') + '</span>';
 }
@@ -913,12 +933,16 @@ function ageChip(p){
 function slotRoster(mine){
   var slots = [];
   function add(label,pos){ slots.push({label:label,pos:pos,player:null}); }
+  if (typeof SLOT_PLAN !== 'undefined' && SLOT_PLAN) {
+    SLOT_PLAN.forEach(function(x){ add(x.label, x.pos); });
+  } else {
   add('QB','QB'); add('RB','RB'); add('RB','RB');
   add('WR','WR'); add('WR','WR'); add('WR','WR');
   add('TE','TE'); add('W/R/T','FLEX'); add('W/R/T','FLEX');
   add('K','K'); add('DEF','DST');
   for (var i = 0; i < 15; i++) add('BN','BN');
   for (var j = 0; j < 3; j++) add('IR','IR');
+  }
   mine.forEach(function(pl){
     var s = null;
     for (var j = 0; j < slots.length; j++)
@@ -926,6 +950,12 @@ function slotRoster(mine){
     if (!s && (pl.pos==='RB'||pl.pos==='WR'||pl.pos==='TE'))
       for (var k = 0; k < slots.length; k++)
         if (slots[k].pos === 'FLEX' && !slots[k].player) { s = slots[k]; break; }
+    if (!s && (pl.pos==='WR'||pl.pos==='TE'))
+      for (var k2 = 0; k2 < slots.length; k2++)
+        if (slots[k2].pos === 'RECFLEX' && !slots[k2].player) { s = slots[k2]; break; }
+    if (!s && (pl.pos==='QB'||pl.pos==='RB'||pl.pos==='WR'||pl.pos==='TE'))
+      for (var k3 = 0; k3 < slots.length; k3++)
+        if (slots[k3].pos === 'SUPERFLEX' && !slots[k3].player) { s = slots[k3]; break; }
     if (!s)
       for (var m = 0; m < slots.length; m++)
         if (slots[m].pos === 'BN' && !slots[m].player) { s = slots[m]; break; }
@@ -1196,7 +1226,11 @@ function viewDraft(){
     html += '<div class="mock-banner"><div class="mock-banner-txt">MOCK DRAFT \u2014 other 11 teams auto-pick. Your real draft is saved.</div>' +
       '<button class="mock-exit" onclick="exitMock()">Exit</button></div>';
   } else {
-    html += '<button class="mock-start-btn" onclick="startMock()">\u25B6 Run a Mock Draft</button>';
+    html += '<div class="sl-row">' +
+      '<button class="sl-connect' + (SLEEPER.on ? ' live' : '') + '" onclick="openSleeper()">' +
+        (SLEEPER.on ? '\u25CF Sleeper live \u00b7 ' + SLEEPER.applied + ' picks' : '\u21BB Connect Sleeper') + '</button>' +
+      '<button class="mock-start-btn sl-half" onclick="startMock()">\u25B6 Mock Draft</button>' +
+      '</div>';
   }
   if (!done) {
     var mkt = marketState();
@@ -1298,7 +1332,7 @@ function viewTeam(){
   html += '<div class="section-label">Starters</div>';
   if (projStatus === 'ready') {
     var lineupPPG = 0, covered = 0;
-    slots.slice(0, 11).forEach(function(s){
+    slots.slice(0, STARTER_COUNT).forEach(function(s){
       if (s.player && PROJ[s.player.rank]) { lineupPPG += PROJ[s.player.rank].ppg; covered++; }
     });
     if (covered) {
@@ -1306,11 +1340,13 @@ function viewTeam(){
         (covered < 11 ? ' <span style="color:#43507c">(' + covered + ' of 11 slots projected)</span>' : '') + '</div>';
     }
   }
-  slots.slice(0, 11).forEach(function(s){ html += rosterRow(s); });
-  html += '<div class="section-label">Bench (15)</div>';
-  slots.slice(11, 26).forEach(function(s){ html += rosterRow(s); });
-  html += '<div class="section-label">Injured Reserve (3)</div>';
-  slots.slice(26).forEach(function(s){ html += rosterRow(s); });
+  slots.filter(function(s){ return s.pos!=='BN' && s.pos!=='IR'; }).forEach(function(s){ html += rosterRow(s); });
+  var bn = slots.filter(function(s){ return s.pos==='BN'; });
+  var ir = slots.filter(function(s){ return s.pos==='IR'; });
+  if (bn.length) { html += '<div class="section-label">Bench (' + bn.length + ')</div>';
+    bn.forEach(function(s){ html += rosterRow(s); }); }
+  if (ir.length) { html += '<div class="section-label">Injured Reserve (' + ir.length + ')</div>';
+    ir.forEach(function(s){ html += rosterRow(s); }); }
   html += '<div style="margin-top:20px;text-align:center;">';
   if (confirmingReset) {
     html += '<div style="color:#f4778a;margin-bottom:8px;font-size:14px;">Clear the entire draft? This can\'t be undone.</div>' +
@@ -1620,6 +1656,229 @@ function openResearch(url, title){
   openWindow('win-research', title, body, 'research');
 }
 
+
+/* ==================== SLEEPER LIVE SYNC ==================== */
+var SLEEPER = { on:false, username:'', userId:'', leagueId:'', leagueName:'', draftId:'',
+                status:'', lastSync:null, timer:null, applied:0, unmatched:[], warn:'' };
+var DRAFT_TYPE = 'snake';
+var SLOT_PLAN = null;   /* built from the league's real roster settings */
+
+function sleeperGet(path){
+  return fetch('https://api.sleeper.app/v1' + path).then(function(r){
+    if (!r.ok) throw new Error('Sleeper ' + r.status);
+    return r.json();
+  });
+}
+
+/* --- map a Sleeper pick to a board player, inventing an entry if unknown --- */
+function sleeperMatch(pick){
+  var md = pick.metadata || {};
+  var pos = String(md.position || '').toUpperCase();
+  if (pos === 'DEF') pos = 'DST';
+  var name = ((md.first_name || '') + ' ' + (md.last_name || '')).trim();
+
+  if (pos === 'DST') {
+    var tm = String(md.team || '').toUpperCase();
+    for (var i = 0; i < PLAYERS.length; i++)
+      if (PLAYERS[i].pos === 'DST' && PLAYERS[i].team.toUpperCase() === tm) return PLAYERS[i].rank;
+  }
+  var r = matchPlayer(name, pos);
+  if (r != null) return r;
+
+  /* not on our board (deep sleeper, practice squad) — register it so pick order stays true */
+  var rank = PLAYERS.length + 1;
+  var p = { rank:rank, name:name || ('Unknown ' + pos), pos:(pos||'WR'), team:(md.team||'FA'),
+            age:0, tier:99, rookie:false, posRank:0 };
+  PLAYERS.push(p);
+  BY_RANK[rank] = p;
+  NAME_INDEX = null;
+  SLEEPER.unmatched.push(p.name);
+  return rank;
+}
+
+/* --- rebuild roster slots + league size from the real league --- */
+function applyDraftConfig(draft, myUserId, reserveSlots){
+  var st = draft.settings || {};
+  if (st.teams)  NUM_TEAMS = st.teams;
+  if (st.rounds) ROUNDS = st.rounds;
+  TOTAL_PICKS = NUM_TEAMS * ROUNDS;
+  DRAFT_TYPE = (draft.type === 'linear') ? 'linear' : 'snake';
+
+  if (draft.draft_order && myUserId && draft.draft_order[myUserId]) {
+    MY_SLOT = draft.draft_order[myUserId];
+  }
+
+  var plan = [];
+  function push(n, label, pos){ for (var i=0;i<(n||0);i++) plan.push({label:label,pos:pos}); }
+  push(st.slots_qb, 'QB','QB');
+  push(st.slots_rb, 'RB','RB');
+  push(st.slots_wr, 'WR','WR');
+  push(st.slots_te, 'TE','TE');
+  push(st.slots_flex, 'W/R/T','FLEX');
+  push(st.slots_super_flex, 'SFLEX','SUPERFLEX');
+  push(st.slots_rec_flex, 'W/T','RECFLEX');
+  push(st.slots_k, 'K','K');
+  push(st.slots_def, 'DEF','DST');
+  var starterCount = plan.length;
+  push(st.slots_bn, 'BN','BN');
+  push(reserveSlots, 'IR','IR');
+  if (plan.length) {
+    SLOT_PLAN = plan;
+    STARTERS = { QB:st.slots_qb||0, RB:st.slots_rb||0, WR:st.slots_wr||0, TE:st.slots_te||0,
+                 FLEX:(st.slots_flex||0)+(st.slots_super_flex||0)+(st.slots_rec_flex||0),
+                 K:st.slots_k||0, DST:st.slots_def||0 };
+    STARTER_COUNT = starterCount;
+  }
+}
+
+/* --- pull picks and mirror them onto the board --- */
+function syncPicks(){
+  if (!SLEEPER.draftId || mockMode) return;
+  sleeperGet('/draft/' + SLEEPER.draftId + '/picks').then(function(rows){
+    if (!Array.isArray(rows)) return;
+    rows.sort(function(a,b){ return (a.pick_no||0) - (b.pick_no||0); });
+    var next = [];
+    var mismatch = 0;
+    rows.forEach(function(pk, i){
+      next.push(sleeperMatch(pk));
+      if (pk.draft_slot && teamOnClock(i+1) !== pk.draft_slot) mismatch++;
+    });
+    SLEEPER.warn = mismatch > 0
+      ? 'Pick order differs from Sleeper on ' + mismatch + ' pick(s) — check the draft type.'
+      : '';
+    var changed = next.length !== picks.length;
+    picks = next;
+    SLEEPER.applied = next.length;
+    SLEEPER.lastSync = new Date();
+    SLEEPER.status = 'live';
+    saveDraft();
+    render();
+  }).catch(function(e){
+    SLEEPER.status = 'error';
+    SLEEPER.warn = 'Sync failed: ' + e.message;
+    render();
+  });
+}
+
+function startSync(){
+  if (SLEEPER.timer) clearInterval(SLEEPER.timer);
+  SLEEPER.on = true;
+  syncPicks();
+  SLEEPER.timer = setInterval(syncPicks, 5000);
+  if (hasStorage()) window.storage.set('sleeper-cfg', JSON.stringify({
+    username:SLEEPER.username, userId:SLEEPER.userId,
+    leagueId:SLEEPER.leagueId, leagueName:SLEEPER.leagueName, draftId:SLEEPER.draftId
+  })).catch(function(){});
+}
+
+function stopSync(){
+  SLEEPER.on = false;
+  SLEEPER.status = '';
+  if (SLEEPER.timer) { clearInterval(SLEEPER.timer); SLEEPER.timer = null; }
+  render();
+}
+
+/* --- connect flow: username -> leagues -> draft --- */
+function sleeperFindUser(){
+  var el = document.getElementById('sleeper-user');
+  var name = el ? String(el.value || '').trim() : '';
+  if (!name) return;
+  SLEEPER.username = name;
+  SLEEPER.status = 'looking up user\u2026';
+  renderSleeperWindow();
+  sleeperGet('/user/' + encodeURIComponent(name)).then(function(u){
+    if (!u || !u.user_id) throw new Error('user not found');
+    SLEEPER.userId = u.user_id;
+    var yr = new Date().getFullYear();
+    return sleeperGet('/user/' + u.user_id + '/leagues/nfl/' + yr).then(function(ls){
+      if (!ls || !ls.length) return sleeperGet('/user/' + u.user_id + '/leagues/nfl/' + (yr-1));
+      return ls;
+    });
+  }).then(function(leagues){
+    SLEEPER.leagues = leagues || [];
+    SLEEPER.status = SLEEPER.leagues.length ? 'pick a league' : 'no leagues found';
+    renderSleeperWindow();
+  }).catch(function(e){
+    SLEEPER.status = 'Could not find that username (' + e.message + ')';
+    renderSleeperWindow();
+  });
+}
+
+function sleeperPickLeague(leagueId, leagueName){
+  SLEEPER.leagueId = leagueId;
+  SLEEPER.leagueName = leagueName;
+  SLEEPER.status = 'loading draft\u2026';
+  renderSleeperWindow();
+  var reserve = 0;
+  sleeperGet('/league/' + leagueId).then(function(lg){
+    reserve = (lg && lg.settings && lg.settings.reserve_slots) || 0;
+    return sleeperGet('/league/' + leagueId + '/drafts');
+  }).then(function(drafts){
+    if (!drafts || !drafts.length) throw new Error('no draft found for this league');
+    drafts.sort(function(a,b){ return (b.created||0) - (a.created||0); });
+    var d = drafts[0];
+    SLEEPER.draftId = d.draft_id;
+    applyDraftConfig(d, SLEEPER.userId, reserve);
+    SLEEPER.status = 'connected';
+    startSync();
+    renderSleeperWindow();
+  }).catch(function(e){
+    SLEEPER.status = 'Error: ' + e.message;
+    renderSleeperWindow();
+  });
+}
+
+function openSleeper(){ renderSleeperWindow(); }
+
+function renderSleeperWindow(){
+  var h = '';
+  if (SLEEPER.on) {
+    h += '<div class="sl-live">Connected to <b>' + esc(SLEEPER.leagueName || 'league') + '</b></div>' +
+         '<div class="sl-meta">' + SLEEPER.applied + ' picks synced &middot; ' +
+         NUM_TEAMS + ' teams &middot; ' + ROUNDS + ' rounds &middot; you are slot ' + MY_SLOT +
+         (SLEEPER.lastSync ? ' &middot; updated ' + SLEEPER.lastSync.toLocaleTimeString() : '') + '</div>';
+    if (SLEEPER.warn) h += '<div class="sl-warn">' + esc(SLEEPER.warn) + '</div>';
+    if (SLEEPER.unmatched.length) h += '<div class="sl-meta">Not on the board (added automatically): ' +
+      esc(SLEEPER.unmatched.slice(-6).join(', ')) + '</div>';
+    h += '<button class="sl-btn sl-stop" onclick="stopSync();renderSleeperWindow()">Disconnect</button>';
+  } else if (SLEEPER.leagues && SLEEPER.leagues.length && !SLEEPER.leagueId) {
+    h += '<div class="sl-meta">Choose the league to follow:</div>';
+    SLEEPER.leagues.forEach(function(l){
+      h += '<button class="sl-league" onclick="sleeperPickLeague(\'' + esc(l.league_id) + '\',\'' +
+           esc(String(l.name||'').replace(/'/g,'')) + '\')">' + esc(l.name || l.league_id) +
+           ' <span class="sl-sub">' + (l.total_rosters||'?') + ' teams &middot; ' + esc(l.season||'') + '</span></button>';
+    });
+  } else {
+    h += '<div class="sl-meta">Enter your Sleeper username. No password needed \u2014 Sleeper\u0027s API is public and read-only.</div>' +
+         '<input id="sleeper-user" class="search" placeholder="Sleeper username" value="' + esc(SLEEPER.username) + '">' +
+         '<button class="sl-btn" onclick="sleeperFindUser()">Find my leagues</button>';
+  }
+  if (SLEEPER.status && !SLEEPER.on) h += '<div class="sl-meta">' + esc(SLEEPER.status) + '</div>';
+  openWindow('win-sleeper', 'Sleeper sync', h, 'player');
+}
+
+function restoreSleeper(){
+  if (!hasStorage()) return;
+  window.storage.get('sleeper-cfg').then(function(r){
+    if (!r || !r.value) return;
+    try {
+      var c = JSON.parse(r.value);
+      if (c && c.draftId) {
+        SLEEPER.username = c.username || '';
+        SLEEPER.userId = c.userId || '';
+        SLEEPER.leagueId = c.leagueId || '';
+        SLEEPER.leagueName = c.leagueName || '';
+        SLEEPER.draftId = c.draftId;
+        SLEEPER.status = 'reconnecting\u2026';
+        sleeperGet('/draft/' + c.draftId).then(function(d){
+          applyDraftConfig(d, SLEEPER.userId, 0);
+          startSync();
+        }).catch(function(){ SLEEPER.status='' ; });
+      }
+    } catch(e){}
+  }).catch(function(){});
+}
+
 function render(){
   renderChyron();
   renderView();
@@ -1640,6 +1899,7 @@ function render(){
 
 initWindowDrag();
 loadDraft();
+restoreSleeper();
 </script>
 </body>
 </html>
