@@ -72,6 +72,18 @@ body { font-family: 'Inter', system-ui, sans-serif; background: #070b1c; color: 
 .scout-val { flex: 1; color: #d6ddf5; }
 .scout-err { color: #f4778a; font-size: 13px; padding: 10px 0; }
 .lookup-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.win { position: fixed; background: #0d1430; border: 1px solid #2b3a6b; border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.6); display: flex; flex-direction: column; overflow: hidden; }
+.win-bar { display: flex; align-items: center; gap: 8px; background: #16203f; border-bottom: 1px solid #22305c; padding: 9px 10px; cursor: grab; touch-action: none; user-select: none; flex-shrink: 0; }
+.win-bar:active { cursor: grabbing; }
+.win-title { flex: 1; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: .5px; color: #cdd8f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.win-x { background: #22305c; color: #cdd8f5; border: none; border-radius: 6px; width: 26px; height: 26px; font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+.win-body { flex: 1; overflow-y: auto; padding: 12px 14px 16px; -webkit-overflow-scrolling: touch; }
+.win-grip { position: absolute; right: 0; bottom: 0; width: 26px; height: 26px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 48%, #3d4d80 48%, #3d4d80 60%, transparent 60%, transparent 72%, #3d4d80 72%, #3d4d80 84%, transparent 84%); }
+.win-note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11px; color: #8fa0cf; background: #101832; border: 1px solid #1c2750; border-radius: 8px; padding: 7px 9px; margin-bottom: 8px; line-height: 1.35; }
+.win-open { background: #1a2244; color: #7fd4c1; border: 1px solid #2b7a63; border-radius: 7px; padding: 6px 10px; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; margin-left: auto; }
+.win-frame-wrap { position: relative; height: calc(100% - 46px); min-height: 180px; border-radius: 8px; overflow: hidden; background: #070b1c; }
+.win-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+.win-body .lookup-row { margin-top: 10px; }
 .lookup-btn { flex: 1; min-width: 96px; text-align: center; background: #1a2244; color: #7fd4c1; border: 1px solid #2b7a63; border-radius: 8px; padding: 10px 8px; font-size: 12px; font-weight: 700; text-decoration: none; }
 .mock-banner { background: #2a1c3f; border: 1px solid #6b4ba8; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
 .mock-banner-txt { flex: 1; font-size: 13px; font-weight: 700; color: #c9b3f5; }
@@ -154,6 +166,7 @@ window.CLAUDE_PROXY = null;
 </div>
 <div id="view"></div>
 <div id="modal"></div>
+<div id="windows"></div>
 <div class="footer">DYNASTY startup &middot; 12-team snake &middot; you pick #10 &middot; full PPR, 6pt pass TD &middot; dynasty board updated Jul 2026</div>
 
 <script>
@@ -273,7 +286,7 @@ var confirmingReset = false;
 var saveTimer = null;
 
 function API_ENDPOINT(){
-  return window.CLAUDE_PROXY || 'https://api.anthropic.com/v1/messages';
+  return window.CLAUDE_PROXY;   /* null in this build — no API is ever called */
 }
 function AI_ENABLED(){
   return !!window.CLAUDE_PROXY || location.hostname === '' || location.protocol === 'file:';
@@ -1345,8 +1358,7 @@ function openPlayer(rank){
   var onClock = done ? null : teamOnClock(picks.length + 1);
   var notes = playerNotes(p);
   var newsQ = encodeURIComponent(p.name + ' ' + (p.pos === 'DST' ? 'defense' : 'NFL') + ' news');
-  var html = '<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">' +
-    '<div style="display:flex;align-items:center;gap:10px;">' + badge(p.pos) +
+  var html = '<div style="display:flex;align-items:center;gap:10px;">' + badge(p.pos) +
     '<div class="flex1"><div class="modal-name">' + esc(p.name) + '</div>' +
     '<div class="modal-sub">' + p.team + (p.rookie ? ' &middot; 2026 Rookie' : '') + (isTaken ? ' &middot; ALREADY DRAFTED' : '') + '</div></div>' +
     ageChip(p) + '</div>' +
@@ -1371,17 +1383,17 @@ function openPlayer(rank){
   var slug = p.name.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,'-');
   html += '<div class="scout-head">Research</div>' +
     '<div class="lookup-row">' +
-      '<a class="lookup-btn" href="https://www.google.com/search?q=' + encodeURIComponent(p.name + ' fantasy football 2026 outlook') + '" target="_blank" rel="noopener">News &amp; outlook</a>' +
-      '<a class="lookup-btn" href="https://www.google.com/search?q=' + encodeURIComponent(p.name + ' 2025 season stats') + '" target="_blank" rel="noopener">2025 stats</a>' +
-      '<a class="lookup-btn" href="https://www.fantasypros.com/nfl/players/' + slug + '.php" target="_blank" rel="noopener">FantasyPros</a>' +
+      '<button class="lookup-btn" onclick="openResearch(\'https://www.google.com/search?q=' + encodeURIComponent(p.name + ' fantasy football 2026 outlook') + '\', \'' + esc(p.name) + ' \u2014 news\')">News &amp; outlook</button>' +
+      '<button class="lookup-btn" onclick="openResearch(\'https://www.google.com/search?q=' + encodeURIComponent(p.name + ' 2025 season stats') + '\', \'' + esc(p.name) + ' \u2014 2025 stats\')">2025 stats</button>' +
+      '<button class="lookup-btn" onclick="openResearch(\'https://www.fantasypros.com/nfl/players/' + slug + '.php\', \'' + esc(p.name) + ' \u2014 FantasyPros\')">FantasyPros</button>' +
     '</div>';
   html += '<div class="modal-actions">' +
     (isTaken || done
       ? '<button class="draft-btn" disabled>' + (isTaken ? 'Already drafted' : 'Draft complete') + '</button>'
       : '<button class="draft-btn" onclick="draftFromModal(' + p.rank + ')">Draft to ' + (onClock === MY_SLOT ? 'MY TEAM' : 'Team ' + onClock) + '</button>') +
-    '<button class="close-btn" onclick="closeModal()">\u2715</button>' +
-    '</div></div></div>';
-  document.getElementById('modal').innerHTML = html;
+    '<button class="close-btn" onclick="closeModal()">Close</button>' +
+    '</div>';
+  openWindow('win-player', p.name + '  \u00b7  ' + p.pos + ' \u00b7 ' + p.team, html, 'player');
   /* pull cached scout report from storage if we don't have it in memory */
   if (!scoutCache[rank] && hasStorage()) {
     window.storage.get('scout-' + rank).then(function(r){
@@ -1396,8 +1408,155 @@ function openPlayer(rank){
     }).catch(function(){});
   }
 }
-function closeModal(){ currentModalRank = null; document.getElementById('modal').innerHTML = ''; }
+function closeModal(){ closeWindow('win-player'); }
 function draftFromModal(rank){ closeModal(); draftPlayer(rank); }
+
+
+/* ==================== FLOATING WINDOW SYSTEM ==================== */
+var WIN_Z = 200;
+var DRAG = null;
+
+function winDefaults(kind){
+  var vw = window.innerWidth || 400, vh = window.innerHeight || 700;
+  var mobile = vw < 640;
+  if (kind === 'research') {
+    return mobile
+      ? { x:6, y:64, w:vw-12, h:Math.max(300, vh-120) }
+      : { x:Math.max(16, vw-660), y:80, w:620, h:Math.min(660, vh-120) };
+  }
+  return mobile
+    ? { x:6, y:48, w:vw-12, h:Math.min(540, vh-90) }
+    : { x:Math.max(16, (vw-480)/2 - 180), y:64, w:470, h:Math.min(620, vh-110) };
+}
+
+function focusWindow(id){
+  var el = document.getElementById(id);
+  if (el) el.style.zIndex = ++WIN_Z;
+}
+
+function closeWindow(id){
+  var el = document.getElementById(id);
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+  if (id === 'win-player') currentModalRank = null;
+}
+
+function openWindow(id, title, bodyHTML, kind){
+  var host = document.getElementById('windows');
+  if (!host) return;
+  var el = document.getElementById(id);
+  if (el) {
+    var b = el.getElementsByClassName('win-body')[0];
+    var t = el.getElementsByClassName('win-title')[0];
+    if (b) b.innerHTML = bodyHTML;
+    if (t) t.innerHTML = esc(title);
+    focusWindow(id);
+    return;
+  }
+  var d = winDefaults(kind);
+  el = document.createElement('div');
+  el.className = 'win';
+  el.id = id;
+  el.style.left = Math.round(d.x) + 'px';
+  el.style.top = Math.round(d.y) + 'px';
+  el.style.width = Math.round(d.w) + 'px';
+  el.style.height = Math.round(d.h) + 'px';
+  el.style.zIndex = ++WIN_Z;
+  el.innerHTML =
+    '<div class="win-bar" data-drag="' + id + '">' +
+      '<div class="win-title">' + esc(title) + '</div>' +
+      '<button class="win-x" data-close="' + id + '">\u2715</button>' +
+    '</div>' +
+    '<div class="win-body">' + bodyHTML + '</div>' +
+    '<div class="win-grip" data-resize="' + id + '"></div>';
+  host.appendChild(el);
+}
+
+function winTarget(node, attr){
+  while (node && node !== document) {
+    if (node.getAttribute && node.getAttribute(attr)) return node.getAttribute(attr);
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function initWindowDrag(){
+  if (typeof document.addEventListener !== 'function') return;
+
+  document.addEventListener('pointerdown', function(e){
+    var closeId = winTarget(e.target, 'data-close');
+    if (closeId) { closeWindow(closeId); e.preventDefault(); return; }
+
+    var dragId = winTarget(e.target, 'data-drag');
+    var sizeId = winTarget(e.target, 'data-resize');
+    var id = dragId || sizeId;
+    if (!id) {
+      var anyId = winTarget(e.target, 'id');
+      if (anyId && anyId.indexOf('win-') === 0) focusWindow(anyId);
+      return;
+    }
+    var el = document.getElementById(id);
+    if (!el) return;
+    focusWindow(id);
+    DRAG = {
+      id: id, mode: dragId ? 'move' : 'resize',
+      sx: e.clientX, sy: e.clientY,
+      ox: parseInt(el.style.left, 10) || 0, oy: parseInt(el.style.top, 10) || 0,
+      ow: parseInt(el.style.width, 10) || 400, oh: parseInt(el.style.height, 10) || 300
+    };
+    /* block iframe from swallowing the pointer mid-drag */
+    var f = el.getElementsByClassName('win-frame')[0];
+    if (f) f.style.pointerEvents = 'none';
+    if (e.target.setPointerCapture && e.pointerId != null) {
+      try { e.target.setPointerCapture(e.pointerId); } catch(err){}
+    }
+    e.preventDefault();
+  });
+
+  document.addEventListener('pointermove', function(e){
+    if (!DRAG) return;
+    var el = document.getElementById(DRAG.id);
+    if (!el) { DRAG = null; return; }
+    var dx = e.clientX - DRAG.sx, dy = e.clientY - DRAG.sy;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    if (DRAG.mode === 'move') {
+      var nx = Math.min(Math.max(DRAG.ox + dx, -40), vw - 80);
+      var ny = Math.min(Math.max(DRAG.oy + dy, 0), vh - 44);
+      el.style.left = Math.round(nx) + 'px';
+      el.style.top = Math.round(ny) + 'px';
+    } else {
+      el.style.width  = Math.round(Math.min(Math.max(DRAG.ow + dx, 260), vw - 12)) + 'px';
+      el.style.height = Math.round(Math.min(Math.max(DRAG.oh + dy, 160), vh - 12)) + 'px';
+    }
+    e.preventDefault();
+  });
+
+  function endDrag(){
+    if (!DRAG) return;
+    var el = document.getElementById(DRAG.id);
+    if (el) {
+      var f = el.getElementsByClassName('win-frame')[0];
+      if (f) f.style.pointerEvents = '';
+    }
+    DRAG = null;
+  }
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+}
+
+/* ---- research window: tries to embed, falls back to a tab ---- */
+function openResearch(url, title){
+  var safe = esc(url);
+  var body =
+    '<div class="win-note">' +
+      '<span>Google and many sports sites refuse to load inside another page. If it stays blank, that\u0027s why \u2014 use the button.</span>' +
+      '<a class="win-open" href="' + safe + '" target="_blank" rel="noopener">Open in tab \u2197</a>' +
+    '</div>' +
+    '<div class="win-frame-wrap">' +
+      '<iframe class="win-frame" src="' + safe + '" referrerpolicy="no-referrer" ' +
+        'sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>' +
+    '</div>';
+  openWindow('win-research', title, body, 'research');
+}
 
 function render(){
   renderChyron();
@@ -1417,6 +1576,7 @@ function render(){
   document.getElementById('undo-btn').disabled = picks.length === 0;
 }
 
+initWindowDrag();
 loadDraft();
 </script>
 </body>
