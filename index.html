@@ -414,6 +414,36 @@ kbd{font-family:var(--mono); font-size:11.5px; font-weight:600; background:var(-
   border-radius:6px; padding:6px 10px; font-size:11.5px; font-weight:600; cursor:pointer;
   font-family:var(--sans); flex-shrink:0}
 
+
+/* ---------- roster counts inside the clock bubble ---------- */
+.chyron{display:flex; align-items:flex-start; gap:var(--sp-4); flex-wrap:wrap}
+.chyron-left{flex:1 1 190px; min-width:0}
+.chyron-roster{flex:0 0 auto; text-align:right; padding-left:var(--sp-3);
+  border-left:1px solid var(--line); min-width:168px}
+.chyron.mine .chyron-roster{border-left-color:#2C6B4E}
+.cr-head{font-family:var(--cond); font-weight:700; font-size:9.5px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--text-3); margin-bottom:5px; white-space:nowrap}
+.cr-head span{font-family:var(--mono); letter-spacing:0; color:var(--text-2)}
+.cr-strip{display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap}
+.cr-cell{display:flex; flex-direction:column; align-items:center; min-width:26px;
+  background:var(--panel-2); border:1px solid var(--line-soft); border-radius:5px; padding:3px 4px}
+.chyron.mine .cr-cell{background:rgba(4,20,13,.5); border-color:#245840}
+.cr-cell b{font-family:var(--cond); font-weight:700; font-size:9.5px; letter-spacing:.04em; line-height:1.2}
+.cr-cell i{font-family:var(--mono); font-style:normal; font-weight:700; font-size:13px;
+  line-height:1.25; color:var(--text); font-variant-numeric:tabular-nums}
+.cr-cell.short i{color:var(--amber)}
+.cr-foot{font-family:var(--cond); font-size:9.5px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--text-3); margin-top:5px; white-space:nowrap}
+
+@media (max-width:520px){
+  .chyron{gap:var(--sp-3)}
+  .chyron-roster{flex:1 1 100%; text-align:left; padding-left:0; padding-top:9px;
+    border-left:none; border-top:1px solid var(--line); min-width:0}
+  .chyron.mine .chyron-roster{border-top-color:#2C6B4E; border-left-color:transparent}
+  .cr-strip{justify-content:flex-start}
+  .cr-cell{flex:1; min-width:0}
+}
+
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -1474,7 +1504,11 @@ function renderChyron(){
   var onClock = done ? null : teamOnClock(currentOverall);
   var isMine = onClock === MY_SLOT;
   el.className = 'chyron' + (isMine ? ' mine' : '');
-  if (done) { el.innerHTML = '<div class="chyron-main"><span class="chyron-big">Draft complete</span></div>'; return; }
+  if (done) {
+    el.innerHTML = '<div class="chyron-left"><div class="chyron-main">' +
+      '<span class="chyron-big">Draft complete</span></div></div>' + chyronRoster();
+    return;
+  }
   var round = Math.ceil(currentOverall / NUM_TEAMS);
   var nextMine = myNextPick(currentOverall);
   var until = nextMine ? nextMine - currentOverall : null;
@@ -1487,9 +1521,11 @@ function renderChyron(){
     sub += ' &middot; <span style="color:#F0A93C">traded pick</span>';
   }
   el.innerHTML =
-    '<div class="chyron-main"><span class="pick-tag">PICK ' + pickLabel(currentOverall) + '</span>' +
-    '<span class="chyron-big">' + (isMine ? 'Your pick' : 'Team ' + onClock + ' is picking') + '</span></div>' +
-    '<div class="chyron-sub">' + sub + '</div>';
+    '<div class="chyron-left">' +
+      '<div class="chyron-main"><span class="pick-tag">PICK ' + pickLabel(currentOverall) + '</span>' +
+      '<span class="chyron-big">' + (isMine ? 'Your pick' : 'Team ' + onClock + ' is picking') + '</span></div>' +
+      '<div class="chyron-sub">' + sub + '</div>' +
+    '</div>' + chyronRoster();
 }
 
 function viewGrade(){
@@ -1548,7 +1584,7 @@ function renderView(){
   document.body.className = wide ? 'wide' : 'narrow';
 
   if (wide) {
-    if (L) L.innerHTML = panelQueue() + panelMyCounts() + panelOpponents() + panelMarket() + panelSuggest();
+    if (L) L.innerHTML = panelQueue() + panelOpponents() + panelMarket() + panelSuggest();
     if (R) R.innerHTML = panelList();
     v.innerHTML = panelControls() + centerContent();
   } else {
@@ -1596,43 +1632,34 @@ function panelControls(){
     '</div>';
 }
 
-/* ---- panel: what you already have ---- */
-function panelMyCounts(){
+/* ---- compact roster counts, shown inside the clock bubble ---- */
+function chyronRoster(){
   var mine = myPlayers();
   var counts = needCounts(mine);
   var slots = slotRoster(mine);
   var starters = slots.slice(0, STARTER_COUNT);
+  var openTotal = starters.filter(function(x){ return !x.player; }).length;
   var ownedCount = (typeof pickLedger === 'function') ? (pickLedger()[MY_SLOT] || []).length : ROUNDS;
-  var html = '<div class="mine-head">Your roster <span class="mine-total">' + mine.length + ' of ' +
-    ownedCount + ' picks</span></div>';
-  html += '<div class="mine-strip">';
+
+  var h = '<div class="chyron-roster">';
+  h += '<div class="cr-head">Your roster <span>' + mine.length + '/' + ownedCount + '</span></div>';
+  h += '<div class="cr-strip">';
   ['QB','RB','WR','TE','K','DST'].forEach(function(pos){
     var have = counts[pos] || 0;
-    /* how many dedicated starting slots at this position are still empty */
     var openHere = starters.filter(function(x){ return x.pos === pos && !x.player; }).length;
-    var state, cls;
-    if (openHere > 0) { state = 'need ' + openHere; cls = 'need'; }
-    else if (have === 0) { state = '\u2014'; cls = 'none'; }
-    else { state = 'set'; cls = 'set'; }
-    html += '<div class="mine-cell">' +
-      '<div class="mine-pos" style="color:' + POS_COLOR[pos] + '">' + (pos === 'DST' ? 'DEF' : pos) + '</div>' +
-      '<div class="mine-num">' + have + '</div>' +
-      '<div class="mine-state ' + cls + '">' + state + '</div>' +
+    h += '<span class="cr-cell' + (openHere > 0 ? ' short' : '') + '">' +
+      '<b style="color:' + POS_COLOR[pos] + '">' + (pos === 'DST' ? 'DEF' : pos) + '</b>' +
+      '<i>' + have + '</i>' +
       '<span class="sr-only">' + (pos === 'DST' ? 'Defense' : pos) + ': ' + have + ' rostered' +
-        (openHere > 0 ? ', ' + openHere + ' starting slot' + (openHere===1?'':'s') + ' still open' : ', starters filled') +
-      '</span></div>';
+        (openHere > 0 ? ', ' + openHere + ' starting slot' + (openHere===1?'':'s') + ' open' : '') + '. </span>' +
+      '</span>';
   });
-  html += '</div>';
-  var openStarters = starters.filter(function(x){ return !x.player; }).length;
-  var flexOpen = starters.filter(function(x){ return !x.player &&
-    (x.pos === 'FLEX' || x.pos === 'SUPERFLEX' || x.pos === 'RECFLEX'); }).length;
-  if (openStarters > 0) {
-    html += '<div class="mine-foot">' + openStarters + ' starting slot' + (openStarters===1?'':'s') + ' still empty' +
-      (flexOpen ? ', including ' + flexOpen + ' flex' : '') + '.</div>';
-  } else if (mine.length) {
-    html += '<div class="mine-foot">Every starting slot is filled \u2014 draft for depth and upside now.</div>';
-  }
-  return html;
+  h += '</div>';
+  h += '<div class="cr-foot">' + (openTotal
+    ? openTotal + ' starter' + (openTotal===1?'':'s') + ' open'
+    : 'starters set') + '</div>';
+  h += '</div>';
+  return h;
 }
 
 /* ---- panel: market depth + scarcity alerts ---- */
@@ -1779,7 +1806,7 @@ function panelFeed(){
 }
 
 function viewDraft(){
-  return panelControls() + panelQueue() + panelMyCounts() + panelOpponents() +
+  return panelControls() + panelQueue() + panelOpponents() +
          panelMarket() + panelSuggest() + panelList();
 }
 
