@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dynasty Draft War Room — 12-team Dynasty PPR</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;600;700&display=swap');
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #070b1c; color: #e6ebfa; max-width: 560px; margin: 0 auto; padding: 12px 12px 0; }
+.chyron { border: 1px solid #22305c; background: #101832; border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.chyron.mine { background: #123c26; border-color: #6ee7b4; }
+.chyron-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pick-tag { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 1px; background: #e6ebfa; color: #070b1c; padding: 2px 8px; border-radius: 6px; }
+.chyron-big { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: .5px; text-transform: uppercase; }
+.chyron-sub { font-size: 13px; color: #8fa0cf; margin-top: 2px; }
+.chyron-sub b { color: #6ee7b4; font-weight: 600; }
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab-btn { flex: 1; background: #101832; color: #8fa0cf; border: 1px solid #1c2750; border-radius: 10px; padding: 9px 4px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; }
+.tab-btn.active { background: #5bc0f8; color: #070b1c; border-color: #5bc0f8; }
+.tab-btn.undo { flex: 0 0 64px; color: #f4b26e; border-color: #3a2f1c; background: #1c1608; }
+.tab-btn.undo:disabled { opacity: .35; }
+.suggest-card { background: #0d1430; border: 1px solid #22305c; border-radius: 14px; padding: 10px 10px 4px; margin-bottom: 12px; }
+.suggest-head { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; color: #6ee7b4; padding: 0 4px 8px; }
+.suggest-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-top: 1px solid #17204a; cursor: pointer; }
+.suggest-name { font-weight: 700; font-size: 15px; }
+.star { color: #f8d34e; }
+.reason { font-size: 12px; color: #8fa0cf; margin-top: 2px; line-height: 1.35; }
+.pos-badge { min-width: 38px; text-align: center; font-weight: 800; font-size: 12px; color: #0a1024; border-radius: 8px; padding: 5px 4px; font-family: 'Barlow Condensed', sans-serif; letter-spacing: .5px; flex-shrink: 0; }
+.age-chip { font-size: 11px; font-weight: 700; border-radius: 6px; padding: 1px 6px; flex-shrink: 0; }
+.age-young { background: #12321f; color: #6ee7b4; }
+.age-mid { background: #1a2244; color: #8fa0cf; }
+.age-old { background: #3a1c22; color: #f4778a; }
+.hint { font-size: 11px; font-weight: 800; color: #43507c; letter-spacing: 1px; flex-shrink: 0; }
+.search { width: 100%; background: #101832; border: 1px solid #1c2750; border-radius: 10px; color: #e6ebfa; padding: 10px 12px; font-size: 15px; outline: none; margin-bottom: 8px; }
+.chip-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.chip { border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; background: #141c3a; color: #8fa0cf; }
+.player-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid #101832; cursor: pointer; }
+.rank-num { width: 30px; text-align: right; color: #43507c; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.p-name { font-weight: 700; font-size: 15px; }
+.team-tag { font-size: 12px; color: #5d6b96; font-weight: 600; }
+.section-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase; color: #5d6b96; margin: 14px 0 6px; }
+.roster-row { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-bottom: 1px solid #101832; }
+.board-row { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 8px; }
+.board-row.mine { background: #12271f; }
+.board-pick { width: 40px; color: #43507c; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.empty { color: #43507c; text-align: center; padding: 24px 12px; font-size: 14px; }
+.danger-btn { background: #5c1f2a; color: #f4778a; border: 1px solid #8a2f40; border-radius: 10px; padding: 9px 16px; font-weight: 700; margin-right: 8px; cursor: pointer; }
+.ghost-btn { background: transparent; color: #5d6b96; border: 1px solid #1c2750; border-radius: 10px; padding: 9px 16px; font-weight: 700; cursor: pointer; }
+.footer { text-align: center; color: #2c375e; font-size: 11px; padding: 18px 0 20px; }
+.flex1 { flex: 1; min-width: 0; }
+.avg-age { font-size: 13px; color: #8fa0cf; text-align: center; margin: 10px 0 2px; }
+.modal-bg { position: fixed; inset: 0; background: rgba(3,5,15,.75); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.modal { background: #0d1430; border: 1px solid #22305c; border-radius: 18px 18px 0 0; width: 100%; max-width: 560px; padding: 16px 16px 24px; max-height: 82vh; overflow-y: auto; }
+.modal-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: .5px; }
+.modal-sub { font-size: 13px; color: #8fa0cf; margin-top: 2px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+.stat-box { background: #101832; border: 1px solid #1c2750; border-radius: 10px; padding: 8px 6px; text-align: center; }
+.stat-val { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; }
+.stat-lbl { font-size: 10px; color: #5d6b96; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.note-row { font-size: 13px; color: #b8c4e8; line-height: 1.45; padding: 6px 0; border-top: 1px solid #17204a; }
+.modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+.draft-btn { flex: 1; background: #6ee7b4; color: #06231a; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 800; font-family: 'Inter', sans-serif; cursor: pointer; }
+.draft-btn:disabled { background: #1c2750; color: #43507c; }
+.news-btn { flex: 0 0 auto; background: #101832; color: #5bc0f8; border: 1px solid #1c2750; border-radius: 12px; padding: 14px 16px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: flex; align-items: center; }
+.close-btn { flex: 0 0 auto; background: #101832; color: #8fa0cf; border: 1px solid #1c2750; border-radius: 12px; padding: 14px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.scout-head { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; color: #f8a94e; margin: 14px 0 4px; }
+.scout-btn { width: 100%; background: #1a2244; color: #f8a94e; border: 1px solid #3a2f1c; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+.scout-loading { text-align: center; color: #8fa0cf; font-size: 13px; padding: 14px 0; }
+.scout-row { display: flex; gap: 8px; font-size: 13px; line-height: 1.45; padding: 6px 0; border-top: 1px solid #17204a; }
+.scout-lbl { flex: 0 0 64px; color: #5d6b96; font-weight: 700; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; padding-top: 2px; }
+.scout-val { flex: 1; color: #d6ddf5; }
+.scout-err { color: #f4778a; font-size: 13px; padding: 10px 0; }
+.lookup-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.lookup-btn { flex: 1; min-width: 96px; text-align: center; background: #1a2244; color: #7fd4c1; border: 1px solid #2b7a63; border-radius: 8px; padding: 10px 8px; font-size: 12px; font-weight: 700; text-decoration: none; }
+.mock-banner { background: #2a1c3f; border: 1px solid #6b4ba8; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+.mock-banner-txt { flex: 1; font-size: 13px; font-weight: 700; color: #c9b3f5; }
+.mock-exit { background: #1a1030; color: #a58ae0; border: 1px solid #6b4ba8; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.mock-start-btn { width: 100%; background: linear-gradient(135deg,#6b4ba8,#8f5fd6); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: 'Inter', sans-serif; margin-bottom: 12px; }
+.grade-hero { text-align: center; padding: 18px 0 10px; }
+.grade-letter { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 84px; line-height: .95; }
+.grade-sub { font-size: 14px; color: #8fa0cf; margin-top: 4px; }
+.grade-card { background: #0d1430; border: 1px solid #22305c; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.grade-round { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: 1px; color: #5bc0f8; text-transform: uppercase; }
+.grade-pick { font-size: 15px; font-weight: 700; margin: 3px 0; }
+.grade-verdict { font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-bottom: 4px; }
+.v-steal { background: #12321f; color: #6ee7b4; }
+.v-fine { background: #1a2244; color: #8fa0cf; }
+.v-reach { background: #3a1c22; color: #f4778a; }
+.grade-tip { font-size: 13px; color: #b8c4e8; line-height: 1.45; margin-top: 4px; }
+.grade-alt { font-size: 12px; color: #8fa0cf; margin-top: 4px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 7px 0; border-top: 1px solid #17204a; }
+.summary-row b { font-weight: 700; }
+.market-strip { display: flex; gap: 6px; margin-bottom: 10px; }
+.market-cell { flex: 1; background: #0d1430; border: 1px solid #1c2750; border-radius: 10px; padding: 7px 4px; text-align: center; }
+.market-pos { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 1px; }
+.market-num { font-size: 15px; font-weight: 800; margin-top: 1px; }
+.market-lbl { font-size: 9px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; margin-top: 2px; }
+.market-caption { font-size: 11px; color: #5d6b96; line-height: 1.4; margin: -4px 0 10px; padding: 0 2px; }
+.proj-bar { display: flex; align-items: center; gap: 8px; background: #0d1430; border: 1px solid #1c2750; border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+.proj-btn { background: #1a2244; color: #7fd4c1; border: 1px solid #2b7a63; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
+.proj-btn:disabled { opacity: .6; }
+.proj-status { flex: 1; font-size: 11px; color: #5d6b96; line-height: 1.35; }
+.ppg-chip { font-size: 11px; font-weight: 800; color: #7fd4c1; background: #102b25; border-radius: 5px; padding: 1px 5px; }
+.edge-up { color: #6ee7b4; font-size: 11px; font-weight: 700; }
+.edge-dn { color: #f4b26e; font-size: 11px; font-weight: 700; }
+.sug-num { width: 18px; text-align: center; font-size: 12px; font-weight: 800; color: #43507c; flex-shrink: 0; }
+.market-note { font-size: 12px; color: #f8a94e; background: #241a10; border: 1px solid #3a2f1c; border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.4; }
+</style>
+<script>
+/* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
+(function(){
+  if (window.storage && window.storage.get) return;
+  var NS = 'warroom:';
+  function ok(v){ return Promise.resolve(v); }
+  window.storage = {
+    get: function(k){
+      try { var v = localStorage.getItem(NS+k);
+            return ok(v === null ? null : {key:k, value:v, shared:false}); }
+      catch(e){ return Promise.reject(e); }
+    },
+    set: function(k,v){
+      try { localStorage.setItem(NS+k, v); return ok({key:k, value:v, shared:false}); }
+      catch(e){ return Promise.reject(e); }
+    },
+    delete: function(k){
+      try { localStorage.removeItem(NS+k); return ok({key:k, deleted:true}); }
+      catch(e){ return Promise.reject(e); }
+    },
+    list: function(prefix){
+      try { var out=[]; for (var i=0;i<localStorage.length;i++){ var key=localStorage.key(i);
+              if (key.indexOf(NS)===0){ var bare=key.slice(NS.length);
+                if (!prefix || bare.indexOf(prefix)===0) out.push(bare); } }
+            return ok({keys:out, prefix:prefix||'', shared:false}); }
+      catch(e){ return Promise.reject(e); }
+    }
+  };
+})();
+
+/* ---- No API key, no cost ----
+   This build runs entirely in your browser on free GitHub Pages hosting.
+   The two features that would need a paid API key are replaced with free links. */
+window.CLAUDE_PROXY = null;
+</script>
+</head>
+<body>
+<div id="chyron" class="chyron"></div>
+<div class="tabs">
+  <button class="tab-btn active" id="tab-draft" onclick="setTab('draft')">Draft</button>
+  <button class="tab-btn" id="tab-team" onclick="setTab('team')">My Team</button>
+  <button class="tab-btn" id="tab-board" onclick="setTab('board')">Board</button>
+  <button class="tab-btn" id="tab-grade" style="display:none" onclick="setTab('grade')">Grade</button>
+  <button class="tab-btn undo" id="undo-btn" onclick="undoPick()">Undo</button>
+</div>
+<div id="view"></div>
+<div id="modal"></div>
+<div class="footer">DYNASTY startup &middot; 12-team snake &middot; you pick #10 &middot; full PPR, 6pt pass TD &middot; dynasty board updated Jul 2026</div>
+
+<script>
+var NUM_TEAMS = 12, MY_SLOT = 10, ROUNDS = 17;
+var TOTAL_PICKS = NUM_TEAMS * ROUNDS;
+var STARTERS = { QB:1, RB:2, WR:3, TE:1, FLEX:2, K:1, DST:1 };
+var POS_COLOR = { QB:'#ec5f8f', RB:'#6ee7b4', WR:'#5bc0f8', TE:'#f8a94e', K:'#b3a8f7', DST:'#c0705a' };
+var STORAGE_KEY = 'ff-dynasty-2026-warroom';
+
+/* ===== DYNASTY BOARD: expert dynasty top 240 (PPR) + K/DST appended.
+   age = years as of 2026 season opener. rk = rookie (2026 class). ===== */
+function P(r,n,p,t,age,tier,rk){ return {rank:r,name:n,pos:p,team:t,age:age,tier:tier,rookie:!!rk}; }
+var PLAYERS = [
+P(1,"Puka Nacua","WR","LAR",25,1),P(2,"Ja'Marr Chase","WR","CIN",26,1),P(3,"Bijan Robinson","RB","ATL",24,1),
+P(4,"Jahmyr Gibbs","RB","DET",24,1),P(5,"Jaxon Smith-Njigba","WR","SEA",24,1),P(6,"Amon-Ra St. Brown","WR","DET",26,1),
+P(7,"Malik Nabers","WR","NYG",23,1),P(8,"Justin Jefferson","WR","MIN",27,1),P(9,"Jeremiyah Love","RB","ARI",21,1,1),
+P(10,"CeeDee Lamb","WR","DAL",27,2),P(11,"Trey McBride","TE","ARI",26,2),P(12,"De'Von Achane","RB","MIA",24,2),
+P(13,"Drake London","WR","ATL",25,2),P(14,"Brock Bowers","TE","LV",23,2),P(15,"Rashee Rice","WR","KC",26,2),
+P(16,"Ashton Jeanty","RB","LV",22,2),P(17,"Omarion Hampton","RB","LAC",23,2),P(18,"Tetairoa McMillan","WR","CAR",23,2),
+P(19,"Garrett Wilson","WR","NYJ",26,2),P(20,"Nico Collins","WR","HOU",27,2),P(21,"George Pickens","WR","DAL",25,2),
+P(22,"Christian McCaffrey","RB","SF",30,2),P(23,"Chris Olave","WR","NO",26,3),P(24,"Jayden Daniels","QB","WSH",25,3),
+P(25,"Jonathan Taylor","RB","IND",27,3),P(26,"James Cook","RB","BUF",26,3),P(27,"Carnell Tate","WR","TEN",21,3,1),
+P(28,"Emeka Egbuka","WR","TB",23,3),P(29,"Josh Allen","QB","BUF",30,3),P(30,"Breece Hall","RB","NYJ",25,3),
+P(31,"Saquon Barkley","RB","PHI",29,3),P(32,"Zay Flowers","WR","BAL",25,3),P(33,"DeVonta Smith","WR","PHI",27,3),
+P(34,"A.J. Brown","WR","NE",29,3),P(35,"Luther Burden III","WR","CHI",22,3),P(36,"Drake Maye","QB","NE",24,3),
+P(37,"Colston Loveland","TE","CHI",22,3),P(38,"Ladd McConkey","WR","LAC",24,3),P(39,"Jordyn Tyson","WR","NO",22,3,1),
+P(40,"Rome Odunze","WR","CHI",24,3),P(41,"Lamar Jackson","QB","BAL",29,3),P(42,"Kenneth Walker III","RB","KC",25,4),
+P(43,"Chase Brown","RB","CIN",26,4),P(44,"Quinshon Judkins","RB","CLE",22,4),P(45,"TreVeyon Henderson","RB","NE",23,4),
+P(46,"Tyler Warren","TE","IND",24,4),P(47,"Cam Skattebo","RB","NYG",24,4),P(48,"Tee Higgins","WR","CIN",27,4),
+P(49,"Jaylen Waddle","WR","DEN",27,4),P(50,"Jaxson Dart","QB","NYG",23,4),P(51,"Harold Fannin Jr.","TE","CLE",23,4),
+P(52,"Jalen Hurts","QB","PHI",28,4),P(53,"Derrick Henry","RB","BAL",32,4),P(54,"Jameson Williams","WR","DET",25,4),
+P(55,"Kyle Pitts","TE","ATL",25,4),P(56,"Bucky Irving","RB","TB",24,4),P(57,"Joe Burrow","QB","CIN",29,4),
+P(58,"Josh Jacobs","RB","GB",28,4),P(59,"Patrick Mahomes","QB","KC",30,4),P(60,"Caleb Williams","QB","CHI",24,4),
+P(61,"Bhayshul Tuten","RB","JAX",23,5),P(62,"Marvin Harrison Jr.","WR","ARI",24,5),P(63,"Kyren Williams","RB","LAR",26,5),
+P(64,"Sam LaPorta","TE","DET",25,5),P(65,"Makai Lemon","WR","PHI",22,5,1),P(66,"KC Concepcion","WR","CLE",21,5,1),
+P(67,"Bo Nix","QB","DEN",26,5),P(68,"Terry McLaurin","WR","WSH",30,5),P(69,"Javonte Williams","RB","DAL",26,5),
+P(70,"Davante Adams","WR","LAR",33,5),P(71,"Trevor Lawrence","QB","JAX",26,5),P(72,"DJ Moore","WR","BUF",29,5),
+P(73,"Michael Pittman Jr.","WR","PIT",28,5),P(74,"Travis Etienne","RB","NO",27,5),P(75,"Matthew Golden","WR","GB",23,5),
+P(76,"Tucker Kraft","TE","GB",25,5),P(77,"Brian Thomas Jr.","WR","JAX",23,5),P(78,"Alec Pierce","WR","IND",26,5),
+P(79,"DK Metcalf","WR","PIT",28,5),P(80,"Jordan Addison","WR","MIN",24,5),P(81,"Wan'Dale Robinson","WR","TEN",25,5),
+P(82,"Fernando Mendoza","QB","LV",22,5,1),P(83,"Omar Cooper Jr.","WR","NYJ",22,5,1),P(84,"Courtland Sutton","WR","DEN",30,5),
+P(85,"Brock Purdy","QB","SF",26,5),P(86,"Jayden Higgins","WR","HOU",23,6),P(87,"George Kittle","TE","SF",32,6),
+P(88,"Kenyon Sadiq","TE","NYJ",21,6,1),P(89,"Jadarian Price","RB","SEA",22,6,1),P(90,"D'Andre Swift","RB","CHI",27,6),
+P(91,"Denzel Boston","WR","CLE",22,6,1),P(92,"Germie Bernard","WR","PIT",22,6,1),P(93,"Kyle Monangai","RB","CHI",24,6),
+P(94,"Justin Herbert","QB","LAC",28,6),P(95,"Dak Prescott","QB","DAL",33,6),P(96,"RJ Harvey","RB","DEN",25,6),
+P(97,"Christian Watson","WR","GB",27,6),P(98,"Parker Washington","WR","JAX",24,6),P(99,"Mike Evans","WR","SF",33,6),
+P(100,"Jakobi Meyers","WR","JAX",29,6),P(101,"Chuba Hubbard","RB","CAR",27,6),P(102,"Cam Ward","QB","TEN",24,6),
+P(103,"Tyler Shough","QB","NO",26,6),P(104,"Jake Ferguson","TE","DAL",27,6),P(105,"Michael Wilson","WR","ARI",26,6),
+P(106,"Travis Hunter","WR","JAX",23,6),P(107,"David Montgomery","RB","HOU",29,6),P(108,"T.J. Hockenson","TE","MIN",29,6),
+P(109,"Ricky Pearsall","WR","SF",26,6),P(110,"Jaylen Warren","RB","PIT",27,6),P(111,"Tony Pollard","RB","TEN",29,7),
+P(112,"Chris Bell","WR","MIA",22,7,1),P(113,"Aaron Jones","RB","MIN",31,7),P(114,"Rhamondre Stevenson","RB","NE",28,7),
+P(115,"Rico Dowdle","RB","PIT",28,7),P(116,"Chris Godwin","WR","TB",30,7),P(117,"Kenneth Gainwell","RB","TB",27,7),
+P(118,"Woody Marks","RB","HOU",25,7),P(119,"Daniel Jones","QB","IND",29,7),P(120,"Xavier Worthy","WR","KC",23,7),
+P(121,"Quentin Johnston","WR","LAC",25,7),P(122,"J.K. Dobbins","RB","DEN",27,7),P(123,"Khalil Shakir","WR","BUF",26,7),
+P(124,"Josh Downs","WR","IND",25,7),P(125,"Jalen McMillan","WR","TB",24,7),P(126,"Romeo Doubs","WR","NE",26,7),
+P(127,"Zach Charbonnet","RB","SEA",25,7),P(128,"Jonathon Brooks","RB","CAR",23,7),P(129,"Dallas Goedert","TE","PHI",31,7),
+P(130,"Mark Andrews","TE","BAL",31,7),P(131,"Jordan Love","QB","GB",27,7),P(132,"Blake Corum","RB","LAR",25,7),
+P(133,"Dalton Kincaid","TE","BUF",26,7),P(134,"Matthew Stafford","QB","LAR",38,7),P(135,"Malik Willis","QB","MIA",27,7),
+P(136,"Travis Kelce","TE","KC",36,7),P(137,"Oronde Gadsden II","TE","LAC",23,7),P(138,"Eli Stowers","TE","PHI",23,7,1),
+P(139,"Rachaad White","RB","WSH",27,7),P(140,"Jacory Croskey-Merritt","RB","WSH",25,7),P(141,"Jonah Coleman","RB","DEN",23,8,1),
+P(142,"Chris Brazzell II","WR","CAR",22,8,1),P(143,"De'Zhaun Stribling","WR","SF",23,8,1),P(144,"Malachi Fields","WR","NYG",24,8,1),
+P(145,"Ja'Kobi Lane","WR","BAL",22,8,1),P(146,"Tyjae Spears","RB","TEN",25,8),P(147,"Braelon Allen","RB","NYJ",22,8),
+P(148,"Tyler Allgeier","RB","ARI",26,8),P(149,"Trey Benson","RB","ARI",24,8),P(150,"Elijah Sarratt","WR","BAL",23,8,1),
+P(151,"Jalen Coker","WR","CAR",24,8),P(152,"Jayden Reed","WR","GB",26,8),P(153,"Jack Bech","WR","LV",23,8),
+P(154,"James Conner","RB","ARI",31,8),P(155,"Isaiah Likely","TE","NYG",26,8),P(156,"Kyler Murray","QB","MIN",29,8),
+P(157,"Tre Harris","WR","LAC",24,8),P(158,"Alvin Kamara","RB","NO",31,8),P(159,"Ollie Gordon II","RB","MIA",22,8),
+P(160,"Zachariah Branch","WR","ATL",22,8,1),P(161,"Antonio Williams","WR","WSH",22,8,1),P(162,"Skyler Bell","WR","BUF",24,8,1),
+P(163,"Mike Washington Jr.","RB","LV",23,8,1),P(164,"Jerry Jeudy","WR","CLE",27,8),P(165,"Calvin Ridley","WR","TEN",31,8),
+P(166,"Kaelon Black","RB","SF",24,8,1),P(167,"C.J. Stroud","QB","HOU",24,8),P(168,"Jared Goff","QB","DET",31,8),
+P(169,"Gunnar Helm","TE","TEN",24,8),P(170,"Brenton Strange","TE","JAX",25,8),P(171,"Chris Rodriguez Jr.","RB","JAX",26,9),
+P(172,"Caleb Douglas","WR","MIA",23,9,1),P(173,"Jordan Mason","RB","MIN",27,9),P(174,"Baker Mayfield","QB","TB",31,9),
+P(175,"Ted Hurst","WR","TB",22,9,1),P(176,"Tre Tucker","WR","LV",25,9),P(177,"Jordan James","RB","SF",22,9),
+P(178,"Dylan Sampson","RB","CLE",21,9),P(179,"Savion Williams","WR","GB",24,9),P(180,"Pat Freiermuth","TE","PIT",27,9),
+P(181,"Bryce Young","QB","CAR",25,9),P(182,"Sam Darnold","QB","SEA",29,9),P(183,"Pat Bryant","WR","DEN",23,9),
+P(184,"Tai Felton","WR","MIN",23,9),P(185,"LeQuint Allen","RB","JAX",22,9),P(186,"Kyle Williams","WR","NE",23,9),
+P(187,"Juwan Johnson","TE","NO",29,9),P(188,"Rashid Shaheed","WR","SEA",28,9),P(189,"Hunter Henry","TE","NE",31,9),
+P(190,"Isaac TeSlaa","WR","DET",24,9),P(191,"Jaylin Noel","WR","HOU",24,9),P(192,"Rashod Bateman","WR","BAL",26,9),
+P(193,"Kimani Vidal","RB","LAC",25,9),P(194,"Bryce Lance","WR","NO",24,9,1),P(195,"Dalton Schultz","TE","HOU",30,9),
+P(196,"Adonai Mitchell","WR","NYJ",23,9),P(197,"Tory Horton","WR","SEA",23,9),P(198,"Ty Simpson","QB","LAR",23,9,1),
+P(199,"Tank Dell","WR","HOU",26,9),P(200,"Isiah Pacheco","RB","DET",27,9),P(201,"Chimere Dike","WR","TEN",23,10),
+P(202,"AJ Barner","TE","SEA",24,10),P(203,"J.J. McCarthy","QB","MIN",23,10),P(204,"Brashard Smith","RB","KC",23,10),
+P(205,"Terrance Ferguson","TE","LAR",23,10),P(206,"Tank Bigsby","RB","PHI",25,10),P(207,"Troy Franklin","WR","DEN",23,10),
+P(208,"Jaylen Wright","RB","MIA",23,10),P(209,"Keon Coleman","WR","BUF",23,10),P(210,"Chig Okonkwo","TE","WSH",27,10),
+P(211,"Elic Ayomanor","WR","TEN",23,10),P(212,"Elijah Arroyo","TE","SEA",23,10),P(213,"Jake Tonges","TE","SF",27,10),
+P(214,"Kaleb Johnson","RB","PIT",23,10),P(215,"Jaydon Blue","RB","DAL",22,10),P(216,"Greg Dulcich","TE","MIA",26,10),
+P(217,"Dont'e Thornton Jr.","WR","LV",23,10),P(218,"Trevor Etienne","RB","CAR",22,10),P(219,"Jalen Nailor","WR","LV",27,10),
+P(220,"Tyreek Hill","WR","FA",32,10),P(221,"Ja'Tavion Sanders","TE","CAR",23,10),P(222,"Mike Gesicki","TE","CIN",30,10),
+P(223,"Max Klare","TE","LAR",23,10,1),P(224,"Marlin Klein","TE","HOU",23,10,1),P(225,"Adam Randall","RB","BAL",22,10,1),
+P(226,"Nicholas Singleton","RB","TEN",22,10,1),P(227,"Emmett Johnson","RB","KC",22,10,1),P(228,"Carson Beck","QB","ARI",23,10,1),
+P(229,"Tua Tagovailoa","QB","ATL",28,10),P(230,"Deebo Samuel","WR","FA",30,10),P(231,"Kaytron Allen","RB","WSH",23,10,1),
+P(232,"Brian Robinson Jr.","RB","ATL",27,10),P(233,"Jauan Jennings","WR","MIN",29,10),P(234,"Ray Davis","RB","BUF",26,10),
+P(235,"Keaton Mitchell","RB","LAC",24,10),P(236,"Kayshon Boutte","WR","NE",24,10),P(237,"Justice Hill","RB","BAL",28,10),
+P(238,"Michael Mayer","TE","LV",25,10),P(239,"Sean Tucker","RB","TB",24,10),P(240,"Stefon Diggs","WR","FA",32,10),
+/* K + DST (fungible in dynasty; ranked by 2026 outlook) */
+P(241,"Brandon Aubrey","K","DAL",31,11),P(242,"Cameron Dicker","K","LAC",26,11),P(243,"Ka'imi Fairbairn","K","HOU",32,11),
+P(244,"Jake Bates","K","DET",27,11),P(245,"Chris Boswell","K","PIT",35,11),P(246,"Will Reichard","K","MIN",25,11),
+P(247,"Cam Little","K","JAX",23,11),P(248,"Harrison Mevis","K","LAR",24,11),P(249,"Eddy Pineiro","K","SF",30,11),
+P(250,"Harrison Butker","K","KC",31,11),P(251,"Jason Myers","K","SEA",35,11),P(252,"Tyler Bass","K","BUF",29,11),
+P(253,"Texans D/ST","DST","HOU",0,11),P(254,"Broncos D/ST","DST","DEN",0,11),P(255,"Seahawks D/ST","DST","SEA",0,11),
+P(256,"Rams D/ST","DST","LAR",0,11),P(257,"Steelers D/ST","DST","PIT",0,11),P(258,"Chargers D/ST","DST","LAC",0,11),
+P(259,"Patriots D/ST","DST","NE",0,11),P(260,"Eagles D/ST","DST","PHI",0,11),P(261,"Vikings D/ST","DST","MIN",0,11),
+P(262,"Packers D/ST","DST","GB",0,11),P(263,"Ravens D/ST","DST","BAL",0,11),P(264,"Bills D/ST","DST","BUF",0,11)
+];
+var BY_RANK = {};
+var posCounter = {};
+PLAYERS.forEach(function(p){
+  BY_RANK[p.rank] = p;
+  posCounter[p.pos] = (posCounter[p.pos] || 0) + 1;
+  p.posRank = posCounter[p.pos];
+});
+
+var picks = [];
+var tab = 'draft';
+var search = '';
+var posFilter = 'ALL';
+var confirmingReset = false;
+var saveTimer = null;
+
+function API_ENDPOINT(){
+  return window.CLAUDE_PROXY || 'https://api.anthropic.com/v1/messages';
+}
+function AI_ENABLED(){
+  return !!window.CLAUDE_PROXY || location.hostname === '' || location.protocol === 'file:';
+}
+var currentModalRank = null;
+var scoutCache = {};
+var PROJ = {};            /* rank -> {ppg, pts} from real fetched projections */
+var projStatus = 'none';  /* none | loading | ready | error */
+var projProgress = '';
+
+/* --- name matching between the board and fetched projection rows --- */
+function normName(s){
+  return String(s).toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/g,'')
+    .replace(/d\/st|dst|defense/g,'')
+    .replace(/[^a-z ]/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+var NAME_INDEX = null;
+function nameIndex(){
+  if (NAME_INDEX) return NAME_INDEX;
+  NAME_INDEX = {};
+  PLAYERS.forEach(function(p){
+    NAME_INDEX[normName(p.name) + '|' + p.pos] = p.rank;
+    var parts = normName(p.name).split(' ');
+    if (parts.length > 1) NAME_INDEX[parts[0][0] + ' ' + parts[parts.length-1] + '|' + p.pos] = p.rank;
+  });
+  return NAME_INDEX;
+}
+function matchPlayer(name, pos){
+  var idx = nameIndex();
+  var n = normName(name);
+  if (idx[n + '|' + pos] != null) return idx[n + '|' + pos];
+  var parts = n.split(' ');
+  if (parts.length > 1) {
+    var abbr = parts[0][0] + ' ' + parts[parts.length-1] + '|' + pos;
+    if (idx[abbr] != null) return idx[abbr];
+  }
+  /* last-name fallback, only when unambiguous at that position */
+  var last = parts[parts.length-1];
+  if (last) {
+    var hits = PLAYERS.filter(function(p){
+      return p.pos === pos && normName(p.name).split(' ').slice(-1)[0] === last;
+    });
+    if (hits.length === 1) return hits[0].rank;
+  }
+  return null;
+}
+
+var PROJ_BATCHES = [
+  { pos:'QB', n:32, label:'quarterbacks' },
+  { pos:'RB', n:36, label:'running backs (1-36)' },
+  { pos:'RB', n:36, label:'running backs (37-72)', skip:36 },
+  { pos:'WR', n:40, label:'wide receivers (1-40)' },
+  { pos:'WR', n:40, label:'wide receivers (41-80)', skip:40 },
+  { pos:'TE', n:32, label:'tight ends' }
+];
+
+function fetchProjections(){
+  if (projStatus === 'loading') return;
+  projStatus = 'loading';
+  var done = 0, matched = 0, missed = [];
+  render();
+
+  function runBatch(i){
+    if (i >= PROJ_BATCHES.length) {
+      projStatus = matched > 40 ? 'ready' : 'error';
+      projProgress = matched + ' players matched' + (missed.length ? ', ' + missed.length + ' unmatched' : '');
+      if (hasStorage() && matched > 40) {
+        window.storage.set('proj-v1', JSON.stringify({ proj: PROJ, when: Date.now(), matched: matched })).catch(function(){});
+      }
+      render();
+      return;
+    }
+    var b = PROJ_BATCHES[i];
+    projProgress = 'Fetching ' + b.label + '\u2026 (' + (i+1) + '/' + PROJ_BATCHES.length + ')';
+    render();
+    var prompt = 'Search the web for 2026 NFL fantasy football season projections. ' +
+      'Return the projected 2026 season for ' + (b.skip ? 'the ' + b.label : 'the top ' + b.n + ' ' + b.label) + '. ' +
+      'Scoring is FULL PPR with these non-standard rules: 6 points per passing TD, 0.04 pts per passing yard, ' +
+      '0.1 pts per rushing/receiving yard, 6 pts rushing/receiving TD, -2 fumble lost, -1 interception. ' +
+      'Respond with ONLY a raw JSON array, no markdown fences, no commentary. Each element: ' +
+      '{"name":"Full Name","team":"ABV","pts":<projected total season fantasy points as a number>,' +
+      '"ppg":<projected fantasy points per game as a number>,"games":<projected games played>}. ' +
+      'Use real published projections where available. Order by projected points, highest first.';
+    fetch(API_ENDPOINT(), {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000,
+        messages:[{role:'user',content:prompt}],
+        tools:[{type:'web_search_20250305', name:'web_search'}] })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      var text = (data.content||[]).filter(function(x){return x.type==='text';}).map(function(x){return x.text;}).join('\n');
+      var clean = text.replace(/```json|```/g,'').trim();
+      var s = clean.indexOf('['), e = clean.lastIndexOf(']');
+      if (s >= 0 && e > s) {
+        var rows = JSON.parse(clean.substring(s, e+1));
+        rows.forEach(function(row){
+          var rank = matchPlayer(row.name, b.pos);
+          if (rank != null && row.ppg != null) {
+            if (!PROJ[rank]) matched++;
+            PROJ[rank] = { ppg: Number(row.ppg), pts: Number(row.pts) || null, games: Number(row.games) || null };
+          } else if (rank == null) { missed.push(row.name); }
+        });
+      }
+    }).catch(function(err){ console.error('proj batch failed', b.label, err); })
+      .then(function(){ done++; runBatch(i+1); });
+  }
+  runBatch(0);
+}
+
+function loadStoredProjections(){
+  if (!hasStorage()) return;
+  window.storage.get('proj-v1').then(function(r){
+    if (r && r.value) {
+      try {
+        var d = JSON.parse(r.value);
+        if (d && d.proj) { PROJ = d.proj; projStatus = 'ready';
+          projProgress = d.matched + ' players \u00b7 loaded ' + new Date(d.when).toLocaleDateString();
+          render(); }
+      } catch(e){}
+    }
+  }).catch(function(){});
+}
+
+/* projected value vs dynasty rank: positive = produces better than his dynasty price */
+function projEdge(p){
+  if (!PROJ[p.rank]) return null;
+  var mine = PROJ[p.rank].ppg;
+  var peers = PLAYERS.filter(function(x){ return x.pos === p.pos && PROJ[x.rank]; })
+                     .sort(function(a,b){ return PROJ[b.rank].ppg - PROJ[a.rank].ppg; });
+  var prodRank = peers.findIndex(function(x){ return x.rank === p.rank; }) + 1;
+  var dynPosRank = PLAYERS.filter(function(x){ return x.pos === p.pos && x.rank <= p.rank; }).length;
+  return { ppg: mine, prodRank: prodRank, dynPosRank: dynPosRank, delta: dynPosRank - prodRank };
+}
+
+var mockMode = false;
+var savedRealPicks = null;
+var mockGrade = null;
+
+/* roster construction rules for a 1QB, 17-round dynasty roster */
+var POS_CAP = { QB:2, RB:8, WR:9, TE:3, K:1, DST:1 };
+var POS_TARGET = { QB:2, RB:4, WR:5, TE:2, K:1, DST:1 };
+
+function remainingPicksFor(team, fromOverall){
+  var n = 0;
+  for (var p = fromOverall; p <= TOTAL_PICKS; p++) if (teamOnClock(p) === team) n++;
+  return n;
+}
+/* positions that MUST still be filled (mandatory starting slots with no options later) */
+function mandatoryLeft(counts){
+  return (counts.K === 0 ? 1 : 0) + (counts.DST === 0 ? 1 : 0) +
+         (counts.QB === 0 ? 1 : 0) + (counts.TE === 0 ? 1 : 0);
+}
+
+/* ===== MARKET STATE: league-wide supply & demand ===== */
+function marketState(){
+  var avail = available();
+  var m = {};
+  var flexDemand = 0;
+  var totalDemand = 0;
+  var posTotals = { QB:0, RB:0, WR:0, TE:0 };
+  var teamCounts = [];
+  for (var t = 1; t <= NUM_TEAMS; t++) {
+    var c = needCounts(teamPlayers(t));
+    teamCounts.push(c);
+    var used = Math.max(0, c.RB - STARTERS.RB) + Math.max(0, c.WR - STARTERS.WR) + Math.max(0, c.TE - STARTERS.TE);
+    flexDemand += Math.max(0, STARTERS.FLEX - used);
+    posTotals.QB += c.QB; posTotals.RB += c.RB; posTotals.WR += c.WR; posTotals.TE += c.TE;
+  }
+  var recent = picks.slice(-12).map(function(r){ return BY_RANK[r].pos; });
+  var horizon = 36; /* roughly the next 3 rounds of board */
+  /* how many picks happen before I select again? that's the window that matters */
+  var cur = picks.length + 1;
+  var nextMine = teamOnClock(cur) === MY_SLOT ? myNextPick(cur + 1) : myNextPick(cur);
+  var gap = nextMine ? nextMine - cur : 0;
+
+  ['QB','RB','WR','TE'].forEach(function(pos){
+    var demand = 0;
+    teamCounts.forEach(function(c){ demand += Math.max(0, STARTERS[pos] - c[pos]); });
+    /* RB/WR/TE also compete for the 2 flex slots on every roster */
+    if (pos === 'RB' || pos === 'WR') demand += flexDemand * 0.4;
+    else if (pos === 'TE') demand += flexDemand * 0.2;
+
+    var atPos = avail.filter(function(p){ return p.pos === pos; });
+    var supply = avail.slice(0, horizon).filter(function(p){ return p.pos === pos; }).length;
+    var best = atPos[0];
+    var tierLeft = best ? atPos.filter(function(p){ return p.tier === best.tier; }).length : 0;
+
+    m[pos] = {
+      demand: demand,
+      supply: supply,
+      tierLeft: tierLeft,
+      topTier: best ? best.tier : null,
+      bestName: best ? best.name : null,
+      bestRank: best ? best.rank : null,
+      bestIdx: avail.findIndex(function(p){ return p.pos === pos; }),
+      ratio: supply > 0 ? demand / supply : 99,
+      run: recent.filter(function(x){ return x === pos; }).length,
+      recentTotal: recent.length,
+      leagueAvg: posTotals[pos] / NUM_TEAMS
+    };
+    totalDemand += demand;
+  });
+
+  /* pressure = will the current quality tier at this position survive until I pick again?
+     expTaken = share of the next `gap` picks likely spent on this position.
+     >= 1 means the tier is probably gone before your next turn. */
+  ['QB','RB','WR','TE'].forEach(function(pos){
+    var st = m[pos];
+    st.gap = gap;
+    st.expTaken = totalDemand > 0 ? gap * (st.demand / totalDemand) : 0;
+    st.pressure = st.tierLeft > 0 ? st.expTaken / st.tierLeft : 99;
+  });
+  return m;
+}
+
+/* ===== MOCK DRAFT: AI opponents ===== */
+function teamPlayers(t){
+  var out = [];
+  for (var i = 0; i < picks.length; i++)
+    if (teamOnClock(i + 1) === t) out.push(BY_RANK[picks[i]]);
+  return out;
+}
+
+function aiPickRank(overall){
+  var team = teamOnClock(overall);
+  var counts = needCounts(teamPlayers(team));
+  var round = Math.ceil(overall / NUM_TEAMS);
+  var avail = available();
+  if (!avail.length) return null;
+  var flexUsed = Math.max(0, counts.RB - STARTERS.RB) + Math.max(0, counts.WR - STARTERS.WR) + Math.max(0, counts.TE - STARTERS.TE);
+  var flexOpen = Math.max(0, STARTERS.FLEX - flexUsed);
+  var myLeft = remainingPicksFor(team, overall);
+  var mustFill = mandatoryLeft(counts);
+  var forced = myLeft <= mustFill; /* out of runway: only fill mandatory holes */
+
+  var pool = avail.filter(function(p){
+    if (counts[p.pos] >= POS_CAP[p.pos]) return false;
+    if (forced) {
+      if (p.pos === 'K') return counts.K === 0;
+      if (p.pos === 'DST') return counts.DST === 0;
+      if (p.pos === 'QB') return counts.QB === 0;
+      if (p.pos === 'TE') return counts.TE === 0;
+      return false;
+    }
+    if ((p.pos === 'K' || p.pos === 'DST') && round < 15) return false;
+    return true;
+  });
+  if (!pool.length) pool = avail.filter(function(p){ return counts[p.pos] < POS_CAP[p.pos]; });
+  if (!pool.length) pool = avail;
+
+  var scored = pool.slice(0, 45).map(function(p){
+    var s = 320 - p.rank;
+    if (p.pos === 'QB') { if (counts.QB === 0) s += (round >= 4 ? 20 : 4); else s -= 60; }
+    else if (p.pos === 'TE') { if (counts.TE === 0) s += 10; else s -= 50; }
+    else if (p.pos === 'RB' || p.pos === 'WR') {
+      var open = STARTERS[p.pos] - counts[p.pos];
+      if (open > 0) s += 14; else if (flexOpen > 0) s += 7; else s += 1;
+      if (round >= 8 && counts[p.pos] < POS_TARGET[p.pos]) s += 10; /* build depth */
+    } else { s += 200; } /* K/DST only reach here when appropriate */
+    if (p.pos !== 'DST') {
+      if (p.age <= 23) s += 4;
+      else if (p.pos === 'RB' && p.age >= 28) s -= 8;
+      else if (p.age >= 31) s -= 6;
+    }
+    s += Math.random() * 14; /* human unpredictability */
+    return { p: p, s: s };
+  });
+  scored.sort(function(a,b){ return b.s - a.s; });
+  var poolSize = Math.min(3, scored.length);
+  return scored[Math.floor(Math.random() * poolSize)].p.rank;
+}
+
+function simToMyPick(){
+  var guard = 0;
+  while (picks.length < TOTAL_PICKS && teamOnClock(picks.length + 1) !== MY_SLOT && guard < 300) {
+    var r = aiPickRank(picks.length + 1);
+    if (r === null) break;
+    picks.push(r);
+    guard++;
+  }
+  if (picks.length >= TOTAL_PICKS) {
+    mockGrade = gradeMock();
+    tab = 'grade';
+  }
+  render();
+}
+
+function startMock(){
+  savedRealPicks = picks.slice();
+  picks = [];
+  mockMode = true;
+  mockGrade = null;
+  tab = 'draft';
+  render();
+  setTimeout(simToMyPick, 60);
+}
+
+function exitMock(){
+  picks = savedRealPicks || [];
+  savedRealPicks = null;
+  mockMode = false;
+  mockGrade = null;
+  tab = 'draft';
+  render();
+}
+
+function restartMock(){
+  picks = [];
+  mockGrade = null;
+  tab = 'draft';
+  render();
+  setTimeout(simToMyPick, 60);
+}
+
+/* ===== GRADING ===== */
+function bestFitFor(pool, roster, round){
+  /* highest-ranked available player who fills an open starter/flex slot */
+  var counts = needCounts(roster);
+  var flexUsed = Math.max(0, counts.RB - STARTERS.RB) + Math.max(0, counts.WR - STARTERS.WR) + Math.max(0, counts.TE - STARTERS.TE);
+  var flexOpen = Math.max(0, STARTERS.FLEX - flexUsed);
+  var capped = pool.filter(function(p){ return counts[p.pos] < POS_CAP[p.pos]; });
+  var fits = capped.filter(function(p){
+    if (p.pos === 'K' || p.pos === 'DST') return round >= 15 && counts[p.pos] === 0;
+    if (p.pos === 'QB') return counts.QB === 0;
+    if (p.pos === 'TE') return counts.TE === 0 || flexOpen > 0;
+    return (STARTERS[p.pos] - counts[p.pos]) > 0 || flexOpen > 0;
+  });
+  /* starters full: any non-K/DST player under the cap is legitimate depth */
+  if (!fits.length) fits = capped.filter(function(p){ return p.pos !== 'K' && p.pos !== 'DST'; });
+  if (!fits.length) fits = capped;
+  return fits.length ? fits[0] : pool[0];
+}
+
+function gradeMock(){
+  var rounds = [];
+  var totalCost = 0;
+  for (var i = 0; i < picks.length; i++) {
+    var overall = i + 1;
+    if (teamOnClock(overall) !== MY_SLOT) continue;
+    var p = BY_RANK[picks[i]];
+    var round = Math.ceil(overall / NUM_TEAMS);
+    /* rebuild board + my roster as they were at that moment */
+    var takenBefore = {};
+    var rosterThen = [];
+    for (var j = 0; j < i; j++) {
+      takenBefore[picks[j]] = 1;
+      if (teamOnClock(j + 1) === MY_SLOT) rosterThen.push(BY_RANK[picks[j]]);
+    }
+    var poolThen = PLAYERS.filter(function(x){ return !takenBefore[x.rank]; });
+    var bestFit = bestFitFor(poolThen, rosterThen, round);
+    var bestOverall = poolThen[0];
+
+    /* what did the tool itself recommend at that exact moment? rewind state and ask */
+    var savedPicks = picks;
+    picks = savedPicks.slice(0, i);
+    var sugThen = [];
+    try { sugThen = suggest(10); } catch (e) { sugThen = []; }
+    picks = savedPicks;
+    var sugIdx = -1;
+    for (var k = 0; k < sugThen.length; k++) if (sugThen[k].p.rank === p.rank) { sugIdx = k; break; }
+    var sugTop = sugThen.length ? sugThen[0].p : null;
+
+    /* cost = dynasty value given up vs the best need-fitting option. 0 or less = optimal */
+    var rawCost = p.rank - bestFit.rank;
+    var slip = overall - p.rank; /* how far he fell past his rank */
+    var isKD = (p.pos === 'K' || p.pos === 'DST');
+    if (isKD && round >= 15) rawCost = 0;
+    /* a pick the engine ranked highly was defensible on scarcity/depth grounds,
+       even when a higher-ranked name was technically on the board.
+       Credit scales with how strongly it was recommended. */
+    var cost = rawCost;
+    if (sugIdx === 0) cost = Math.min(rawCost, 2);
+    else if (sugIdx >= 1 && sugIdx <= 2) cost = Math.min(rawCost, 10);
+    else if (sugIdx >= 3) cost = Math.min(rawCost, 12);
+    totalCost += Math.max(0, cost);
+
+    var verdict, cls, tip;
+    if (cost <= 2) { verdict = 'Optimal'; cls = 'v-steal'; }
+    else if (cost <= 14) { verdict = 'Fair'; cls = 'v-fine'; }
+    else { verdict = 'Reach'; cls = 'v-reach'; }
+
+    if (isKD) {
+      tip = round >= 15
+        ? 'Correct timing \u2014 ' + (p.pos === 'K' ? 'kickers' : 'defenses') + ' belong in the final rounds and get replaced yearly.'
+        : 'Too early. This roster spot should have been a young stash; ' + (p.pos==='K'?'kickers':'defenses') + ' are free every season. ' + bestFit.name + ' (' + bestFit.pos + ' #' + bestFit.rank + ') was the pick here.';
+    } else if (sugIdx === 0) {
+      tip = 'Took the board\u0027s top recommendation. ' + (rawCost > 14
+        ? 'Higher-ranked names were available, but positional scarcity and your roster holes made him the right call.'
+        : 'Clean, correct pick.');
+    } else if (sugIdx > 0 && sugIdx <= 2) {
+      tip = 'A recommended option (#' + (sugIdx + 1) + ' on the board). Defensible \u2014 though ' + sugTop.name + ' (' + sugTop.pos + ' #' + sugTop.rank + ') was rated slightly ahead of him for your build.';
+    } else if (cost > 14) {
+      tip = 'You gave up ' + cost + ' spots of dynasty value. ' + bestFit.name + ' (' + bestFit.pos + ' #' + bestFit.rank + ') was the highest-rated player who still fit an open slot' +
+        (bestFit.pos === p.pos ? ' at the same position.' : ' \u2014 taking him and circling back to ' + p.pos + ' later is usually the cleaner path.');
+      if (sugTop) tip += ' The board had ' + sugTop.name + ' (' + sugTop.pos + ') as its top suggestion here.';
+    } else if (cost <= 2 && slip >= 15) {
+      tip = 'Best available for your build, and he fell ' + slip + ' picks past his dynasty rank. Ideal pick.';
+    } else if (cost <= 2) {
+      tip = 'Best available player who fit your roster. Exactly right.';
+    } else {
+      tip = 'Reasonable \u2014 only ' + cost + ' spots below the top option. ' + bestFit.name + ' (' + bestFit.pos + ' #' + bestFit.rank + ') was the highest-rated fit if you wanted the pure-value play.';
+    }
+    if (bestOverall.rank < bestFit.rank && !isKD && sugIdx < 0) {
+      tip += ' (' + bestOverall.name + ' was the overall #1 on the board but didn\u0027t fit an open slot.)';
+    }
+    if (p.pos === 'RB' && p.age >= 28) tip += ' Age ' + p.age + ' RB \u2014 win-now only, minimal resale.';
+    else if (p.rookie) tip += ' Rookie \u2014 highest variance, highest ceiling.';
+
+    rounds.push({
+      round: round, label: pickLabel(overall), player: p, cost: cost, slip: slip,
+      verdict: verdict, cls: cls, tip: tip,
+      alts: poolThen.filter(function(x){ return x.rank !== p.rank; }).slice(0, 3)
+    });
+  }
+
+  var mine = myPlayers();
+  var counts = needCounts(mine);
+  var slots = slotRoster(mine);
+  var emptyStarters = slots.slice(0, 11).filter(function(s){ return !s.player; }).length;
+  var skill = mine.filter(function(x){ return x.pos !== 'K' && x.pos !== 'DST'; });
+  var avgAge = skill.length ? skill.reduce(function(a,x){ return a + x.age; }, 0) / skill.length : 0;
+  var elites = mine.filter(function(x){ return x.rank <= 24; }).length;
+  var avgCost = rounds.length ? totalCost / rounds.length : 0;
+  var earlyKDst = rounds.filter(function(r){ return (r.player.pos==='K'||r.player.pos==='DST') && r.round < 16; }).length;
+  var reaches = rounds.filter(function(r){ return r.cost > 14; }).length;
+
+  var score = 90;
+  score -= Math.min(30, avgCost * 1.2);   /* decision quality: main driver */
+  score -= emptyStarters * 7;
+  score -= reaches * 1.5;                 /* consistency */
+  score += avgAge && avgAge <= 25 ? 3 : (avgAge >= 28 ? -5 : 0);
+  if (counts.RB < 3) score -= 4;
+  if (counts.WR < 4) score -= 4;
+  if (counts.QB === 0) score -= 6;
+  if (counts.TE === 0) score -= 4;
+  score -= earlyKDst * 5;
+  score = Math.max(35, Math.min(99, score));
+
+  var letter = score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 87 ? 'A-' :
+               score >= 83 ? 'B+' : score >= 80 ? 'B' : score >= 77 ? 'B-' :
+               score >= 73 ? 'C+' : score >= 70 ? 'C' : score >= 67 ? 'C-' :
+               score >= 60 ? 'D' : 'F';
+  var color = score >= 87 ? '#6ee7b4' : score >= 77 ? '#5bc0f8' : score >= 67 ? '#f8a94e' : '#f4778a';
+
+  function plural(n, word){ return n + ' ' + word + (n === 1 ? '' : 's'); }
+  var bigNotes = [];
+  if (emptyStarters > 0) bigNotes.push('You finished with ' + plural(emptyStarters, 'empty starting slot') + ' \u2014 fill every starter before stashing depth.');
+  if (counts.RB < 3) bigNotes.push('Only ' + plural(counts.RB, 'RB') + '. With 2 RB slots plus flex, 4+ is the target for injury cover.');
+  if (counts.WR < 4) bigNotes.push('Only ' + plural(counts.WR, 'WR') + '. You start 3 plus flex in full PPR \u2014 5+ is the target.');
+  if (counts.QB === 0) bigNotes.push('No QB. In a 6pt pass TD league that is a huge weekly hole.');
+  if (counts.TE === 0) bigNotes.push('No TE \u2014 you have a mandatory starting slot with nobody in it.');
+  if (avgAge >= 28) bigNotes.push('Average skill age ' + avgAge.toFixed(1) + ' \u2014 a win-now roster that needs a rebuild in 2\u20133 years.');
+  else if (avgAge && avgAge <= 24.5) bigNotes.push('Average skill age ' + avgAge.toFixed(1) + ' \u2014 outstanding dynasty foundation, though possibly light on immediate production.');
+  if (elites === 0) bigNotes.push('No top-24 dynasty assets. Contending rosters usually need at least one true cornerstone.');
+  if (earlyKDst) bigNotes.push('You spent an early pick on a K or DEF \u2014 never do this in dynasty.');
+  if (reaches >= 4) bigNotes.push('You reached on ' + reaches + ' picks. Trust the board \u2014 your guy often lasts another round from slot 10.');
+  else if (avgCost <= 4) bigNotes.push('Disciplined drafting \u2014 you took the best available fit nearly every round.');
+  if (!bigNotes.length) bigNotes.push('Balanced, well-constructed roster with no glaring holes.');
+
+  return {
+    letter: letter, score: Math.round(score), color: color, rounds: rounds,
+    avgCost: avgCost, avgAge: avgAge, counts: counts, elites: elites,
+    emptyStarters: emptyStarters, reaches: reaches, notes: bigNotes
+  };
+}
+
+
+function scoutHTML(d){
+  function row(lbl, val){
+    return val ? '<div class="scout-row"><div class="scout-lbl">' + lbl + '</div><div class="scout-val">' + esc(val) + '</div></div>' : '';
+  }
+  return row('2025', d.stats2025) + row('2024', d.stats2024) + row('Role', d.role) +
+    row('Health', d.health) + row('Latest', d.news) + row('Dynasty', d.dynasty) +
+    '<div style="text-align:right;margin-top:4px;"><button class="scout-btn" style="width:auto;padding:6px 12px;font-size:12px;" onclick="fetchScout(currentModalRank, true)">Refresh</button></div>';
+}
+
+function fetchScout(rank, force){
+  var p = BY_RANK[rank];
+  if (!p) return;
+  var box = document.getElementById('scout-box');
+  if (!box) return;
+  box.innerHTML = '<div class="scout-loading">Scouting ' + esc(p.name) + '\u2026 (searching the web, ~10s)</div>';
+  var subject = p.pos === 'DST'
+    ? p.name + ' (' + p.team + ' team defense, fantasy football)'
+    : p.name + ' (' + p.pos + ', ' + p.team + ', NFL)';
+  var prompt = 'Search the web for current info on ' + subject + ' for a July 2026 dynasty fantasy football draft. ' +
+    'Respond with ONLY a raw JSON object, no markdown fences, no preamble, with these string fields (each 25 words max, use "N/A" if unknown): ' +
+    '"stats2025" (their actual 2025 NFL season stat line with real numbers, e.g. yards/TDs/receptions, plus fantasy finish if found), ' +
+    '"stats2024" (brief 2024 season stat line), ' +
+    '"role" (current 2026 role/depth chart situation), ' +
+    '"health" (current injury status), ' +
+    '"news" (most recent notable headline), ' +
+    '"dynasty" (blunt 1-2 sentence dynasty verdict for a 1QB full-PPR league).' +
+    (p.rookie ? ' This is a 2026 rookie: use their final college season for stats2025 and label it as college.' : '');
+  fetch(API_ENDPOINT(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }],
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }]
+    })
+  }).then(function(res){ return res.json(); }).then(function(data){
+    var text = (data.content || [])
+      .filter(function(b){ return b.type === 'text'; })
+      .map(function(b){ return b.text; })
+      .join('\n');
+    var clean = text.replace(/```json|```/g, '').trim();
+    var start = clean.indexOf('{');
+    var end = clean.lastIndexOf('}');
+    if (start < 0 || end < 0) throw new Error('no json');
+    var d = JSON.parse(clean.substring(start, end + 1));
+    scoutCache[rank] = d;
+    if (hasStorage()) window.storage.set('scout-' + rank, JSON.stringify(d)).catch(function(){});
+    var b2 = document.getElementById('scout-box');
+    if (b2 && currentModalRank === rank) b2.innerHTML = scoutHTML(d);
+  }).catch(function(err){
+    console.error('scout failed', err);
+    var b2 = document.getElementById('scout-box');
+    if (b2 && currentModalRank === rank) {
+      b2.innerHTML = '<div class="scout-err">Couldn\u0027t load the scout report. Check your connection and try again.</div>' +
+        '<button class="scout-btn" onclick="fetchScout(' + rank + ')">Retry</button>';
+    }
+  });
+}
+
+function teamOnClock(overall){
+  var round = Math.ceil(overall / NUM_TEAMS);
+  var idx = (overall - 1) % NUM_TEAMS;
+  return round % 2 === 1 ? idx + 1 : NUM_TEAMS - idx;
+}
+function pickLabel(overall){
+  var round = Math.ceil(overall / NUM_TEAMS);
+  var inRound = ((overall - 1) % NUM_TEAMS) + 1;
+  return round + '.' + (inRound < 10 ? '0' : '') + inRound;
+}
+function myNextPick(after){
+  for (var p = after; p <= TOTAL_PICKS; p++) if (teamOnClock(p) === MY_SLOT) return p;
+  return null;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function available(){
+  var taken = {};
+  picks.forEach(function(r){ taken[r] = 1; });
+  return PLAYERS.filter(function(p){ return !taken[p.rank]; });
+}
+function myPlayers(){
+  var out = [];
+  for (var i = 0; i < picks.length; i++)
+    if (teamOnClock(i + 1) === MY_SLOT) out.push(BY_RANK[picks[i]]);
+  return out;
+}
+function needCounts(mine){
+  var c = { QB:0, RB:0, WR:0, TE:0, K:0, DST:0 };
+  mine.forEach(function(p){ c[p.pos]++; });
+  return c;
+}
+function ageClass(p){
+  if (p.pos === 'DST') return '';
+  if (p.pos === 'RB') return p.age <= 24 ? 'age-young' : (p.age >= 28 ? 'age-old' : 'age-mid');
+  if (p.pos === 'QB') return p.age <= 26 ? 'age-young' : (p.age >= 34 ? 'age-old' : 'age-mid');
+  return p.age <= 24 ? 'age-young' : (p.age >= 30 ? 'age-old' : 'age-mid'); /* WR/TE/K */
+}
+function ageChip(p){
+  if (p.pos === 'DST') return '';
+  var cls = ageClass(p);
+  return '<span class="age-chip ' + cls + '">' + p.age + (p.rookie ? ' R' : '') + '</span>';
+}
+
+function slotRoster(mine){
+  var slots = [];
+  function add(label,pos){ slots.push({label:label,pos:pos,player:null}); }
+  add('QB','QB'); add('RB','RB'); add('RB','RB');
+  add('WR','WR'); add('WR','WR'); add('WR','WR');
+  add('TE','TE'); add('W/R/T','FLEX'); add('W/R/T','FLEX');
+  add('K','K'); add('DEF','DST');
+  for (var i = 0; i < 6; i++) add('BN','BN');
+  mine.forEach(function(pl){
+    var s = null;
+    for (var j = 0; j < slots.length; j++)
+      if (slots[j].pos === pl.pos && !slots[j].player) { s = slots[j]; break; }
+    if (!s && (pl.pos==='RB'||pl.pos==='WR'||pl.pos==='TE'))
+      for (var k = 0; k < slots.length; k++)
+        if (slots[k].pos === 'FLEX' && !slots[k].player) { s = slots[k]; break; }
+    if (!s)
+      for (var m = 0; m < slots.length; m++)
+        if (slots[m].pos === 'BN' && !slots[m].player) { s = slots[m]; break; }
+    if (s) s.player = pl;
+  });
+  return slots;
+}
+
+function suggest(n){
+  n = n || 10;
+  var avail = available();
+  var mine = myPlayers();
+  var counts = needCounts(mine);
+  var currentOverall = picks.length + 1;
+  var round = Math.ceil(currentOverall / NUM_TEAMS);
+  var nextAfter = myNextPick(currentOverall + 1);
+  var gap = nextAfter ? nextAfter - currentOverall : 999;
+  var flexUsed = Math.max(0, counts.RB - STARTERS.RB) + Math.max(0, counts.WR - STARTERS.WR) + Math.max(0, counts.TE - STARTERS.TE);
+  var flexOpen = Math.max(0, STARTERS.FLEX - flexUsed);
+  var myLeft = remainingPicksFor(MY_SLOT, currentOverall);
+  var mustFill = mandatoryLeft(counts);
+  var forced = myLeft <= mustFill;
+  var mkt = marketState();
+
+  var pool = avail.filter(function(p){
+    if (counts[p.pos] >= POS_CAP[p.pos]) return false;
+    if (forced) {
+      if (p.pos === 'K') return counts.K === 0;
+      if (p.pos === 'DST') return counts.DST === 0;
+      if (p.pos === 'QB') return counts.QB === 0;
+      if (p.pos === 'TE') return counts.TE === 0;
+      return false;
+    }
+    return true;
+  });
+  if (!pool.length) pool = avail;
+
+  var scored = pool.slice(0, 80).map(function(p, idxInPool){
+    var score = 320 - p.rank;
+    var reasons = [];
+    if (forced) {
+      score += 300;
+      reasons.push('MUST FILL \u2014 only ' + myLeft + ' pick' + (myLeft===1?'':'s') + ' left and your ' + p.pos + ' slot is empty');
+    }
+    var open = 0;
+    if (p.pos === 'QB') {
+      open = STARTERS.QB - counts.QB;
+      if (counts.QB === 0) { score += (round >= 2 ? 26 : 10); reasons.push('Need a QB \u2014 6pt pass TDs make a long-term QB valuable'); }
+      else { score -= 60; reasons.push('QB2 \u2014 only worth it as a young stash'); if (p.age <= 25) score += 15; }
+    } else if (p.pos === 'TE') {
+      open = STARTERS.TE - counts.TE;
+      if (counts.TE === 0) { score += 20; reasons.push('TE slot open \u2014 steepest positional cliff in the league'); }
+      else if (flexOpen > 0 && counts.TE === 1) { score -= 10; }
+      else { score -= 45; reasons.push('TE already filled'); }
+    } else if (p.pos === 'RB' || p.pos === 'WR') {
+      open = STARTERS[p.pos] - counts[p.pos];
+      if (open > 0) { score += 15; reasons.push(p.pos + (counts[p.pos]+1) + ' starter slot open'); }
+      else if (flexOpen > 0) { score += 8; reasons.push('Fills a W/R/T flex spot'); }
+      else { score += 2; reasons.push('Depth / dynasty stash'); }
+      if (round >= 8 && counts[p.pos] < POS_TARGET[p.pos]) {
+        score += 10;
+        reasons.push('Thin at ' + p.pos + ' \u2014 only ' + counts[p.pos] + ' rostered');
+      }
+      if (p.pos === 'WR') score += 1; /* mild full-PPR lean; heavier weighting crowded out RB value in testing */
+    } else {
+      if (counts[p.pos] > 0) { score -= 300; }
+      else if (round >= 15) { score += 40; reasons.push('Time to grab your ' + (p.pos==='K'?'kicker':'defense')); }
+      else { score -= 250; reasons.push('Never early on K/DEF in dynasty \u2014 stash young players instead'); }
+    }
+
+    /* ---- MARKET AWARENESS: what the rest of the league has done ---- */
+    var st = mkt[p.pos];
+    if (st) {
+      var needsIt = open > 0 || (flexOpen > 0 && (p.pos === 'RB' || p.pos === 'WR' || p.pos === 'TE'));
+      if (needsIt) {
+        if (st.supply === 0) {
+          /* barren: chasing the need here means badly overpaying */
+          score += 4;
+          reasons.push(p.pos + ' cupboard is bare \u2014 best left is well below market value');
+        } else if (st.pressure >= 1) {
+          score += 20;
+          reasons.push('SCARCE \u2014 only ' + st.tierLeft + ' Tier ' + st.topTier + ' ' + p.pos + (st.tierLeft===1?'':'s') + ' left, likely gone in the next ' + st.gap + ' picks');
+        } else if (st.pressure >= 0.6) {
+          score += 12;
+          reasons.push('TIGHT at ' + p.pos + ' \u2014 ' + st.tierLeft + ' left in this tier before the quality drops');
+        } else if (st.pressure <= 0.3) {
+          score -= 6;
+          reasons.push(p.pos + ' is deep (' + st.tierLeft + ' left in tier) \u2014 safe to wait a round');
+        }
+        /* am I behind the league at this position? */
+        if (counts[p.pos] + 1.5 <= st.leagueAvg) {
+          score += 10;
+          reasons.push('You\u0027re behind at ' + p.pos + ' (you ' + counts[p.pos] + ', league avg ' + st.leagueAvg.toFixed(1) + ')');
+        }
+      }
+      /* positional run in progress */
+      if (st.run >= 6 && st.recentTotal >= 8) {
+        score += needsIt ? 8 : 2;
+        reasons.push(p.pos + ' RUN \u2014 ' + st.run + ' of the last ' + st.recentTotal + ' picks were ' + p.pos + 's');
+      }
+    }
+
+    if (p.pos === 'RB' && p.age >= 28) { reasons.push('Age ' + p.age + ' RB \u2014 win-now piece, little resale value'); score -= 4; }
+    else if ((p.pos === 'WR' || p.pos === 'TE') && p.age >= 30) { reasons.push('Age ' + p.age + ' \u2014 declining dynasty asset'); score -= 4; }
+    else if (p.rookie) { reasons.push('2026 rookie \u2014 max long-term upside'); score += 3; }
+    else if (p.age <= 23 && p.pos !== 'DST') { reasons.push('Only ' + p.age + ' \u2014 ascending asset'); score += 2; }
+
+    if (idxInPool < gap && gap < 30) { reasons.push('Likely gone before your next pick (' + gap + ' away)'); score += 6; }
+    /* real projections inform but never override dynasty rank in a dynasty league */
+    if (PROJ[p.rank]) {
+      var eg = projEdge(p);
+      if (eg && eg.delta >= 8) {
+        score += 4;
+        reasons.push('Projects ' + PROJ[p.rank].ppg.toFixed(1) + ' PPG \u2014 produces like ' + p.pos + eg.prodRank + ', better than his dynasty price');
+      } else if (eg && eg.delta <= -8) {
+        reasons.push('Projects only ' + PROJ[p.rank].ppg.toFixed(1) + ' PPG in 2026 \u2014 you\u0027re buying future seasons');
+      }
+    }
+    var sameTier = avail.filter(function(a){ return a.pos === p.pos && a.tier === p.tier; });
+    if (sameTier.length <= 2 && sameTier.length > 0 && p.pos !== 'K' && p.pos !== 'DST') {
+      reasons.push('Tier ' + p.tier + ' ' + p.pos + ' cliff \u2014 only ' + sameTier.length + ' left');
+      score += 5;
+    }
+    return { p: p, score: score, reasons: reasons };
+  });
+  scored.sort(function(a,b){ return b.score - a.score; });
+  return scored.slice(0, n);
+}
+
+function hasStorage(){ return typeof window.storage !== 'undefined' && window.storage && window.storage.get; }
+function loadDraft(){
+  if (!hasStorage()) { render(); return; }
+  window.storage.get(STORAGE_KEY).then(function(r){
+    if (r && r.value) {
+      try { var parsed = JSON.parse(r.value); if (Array.isArray(parsed)) picks = parsed; } catch(e){}
+    }
+    render();
+  }).catch(function(){ render(); });
+}
+loadStoredProjections();
+function saveDraft(){
+  if (!hasStorage() || mockMode) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    window.storage.set(STORAGE_KEY, JSON.stringify(picks)).catch(function(){});
+  }, 400);
+}
+
+function setTab(t){ tab = t; confirmingReset = false; render(); }
+function draftPlayer(rank){
+  if (picks.length >= TOTAL_PICKS) return;
+  picks.push(rank);
+  search = '';
+  saveDraft();
+  if (mockMode) { render(); setTimeout(simToMyPick, 220); return; }
+  render();
+}
+function undoPick(){
+  if (!picks.length) return;
+  if (mockMode) {
+    /* roll back to just before my previous pick so the sim can replay */
+    picks.pop();
+    while (picks.length && teamOnClock(picks.length) !== MY_SLOT) picks.pop();
+    mockGrade = null;
+    tab = 'draft';
+    render();
+    return;
+  }
+  picks.pop();
+  saveDraft();
+  render();
+}
+function askReset(){ confirmingReset = true; render(); }
+function cancelReset(){ confirmingReset = false; render(); }
+function doReset(){ picks = []; confirmingReset = false; saveDraft(); render(); }
+function onSearch(el){ search = el.value; renderView(); }
+function setPos(pos){ posFilter = pos; render(); }
+
+function badge(pos, label){
+  var c = POS_COLOR[pos] || (pos === 'FLEX' ? '#7fd4c1' : '#3a4569');
+  return '<div class="pos-badge" style="background:' + c + '">' + esc(label || pos) + '</div>';
+}
+
+function renderChyron(){
+  var el = document.getElementById('chyron');
+  var done = picks.length >= TOTAL_PICKS;
+  var currentOverall = picks.length + 1;
+  var onClock = done ? null : teamOnClock(currentOverall);
+  var isMine = onClock === MY_SLOT;
+  el.className = 'chyron' + (isMine ? ' mine' : '');
+  if (done) { el.innerHTML = '<div class="chyron-main"><span class="chyron-big">Draft complete</span></div>'; return; }
+  var round = Math.ceil(currentOverall / NUM_TEAMS);
+  var nextMine = myNextPick(currentOverall);
+  var until = nextMine ? nextMine - currentOverall : null;
+  var sub = 'Overall #' + currentOverall + ' &middot; Round ' + round;
+  if (!isMine && until !== null) sub += ' &middot; <b>' + until + ' pick' + (until===1?'':'s') + ' until you</b>';
+  el.innerHTML =
+    '<div class="chyron-main"><span class="pick-tag">PICK ' + pickLabel(currentOverall) + '</span>' +
+    '<span class="chyron-big">' + (isMine ? "You're on the clock" : 'Team ' + onClock + ' on the clock') + '</span></div>' +
+    '<div class="chyron-sub">' + sub + '</div>';
+}
+
+function viewGrade(){
+  var g = mockGrade;
+  if (!g) return '<div class="empty">No mock draft results yet.</div>';
+  var html = '<div class="grade-hero"><div class="grade-letter" style="color:' + g.color + '">' + g.letter + '</div>' +
+    '<div class="grade-sub">Draft score ' + g.score + '/100</div></div>';
+
+  html += '<div class="grade-card">';
+  html += '<div class="summary-row"><span>Avg value lost per pick</span><b style="color:' + (g.avgCost <= 4 ? '#6ee7b4' : g.avgCost <= 12 ? '#5bc0f8' : '#f4778a') + '">' + g.avgCost.toFixed(1) + ' spots</b></div>';
+  html += '<div class="summary-row"><span>Reaches (15+ spots)</span><b style="color:' + (g.reaches ? '#f4778a' : '#6ee7b4') + '">' + g.reaches + '</b></div>';
+  html += '<div class="summary-row"><span>Avg skill-player age</span><b>' + (g.avgAge ? g.avgAge.toFixed(1) : '\u2014') + '</b></div>';
+  html += '<div class="summary-row"><span>Top-24 dynasty assets</span><b>' + g.elites + '</b></div>';
+  html += '<div class="summary-row"><span>Roster</span><b>' + g.counts.QB + 'QB / ' + g.counts.RB + 'RB / ' + g.counts.WR + 'WR / ' + g.counts.TE + 'TE</b></div>';
+  html += '<div class="summary-row"><span>Empty starting slots</span><b style="color:' + (g.emptyStarters ? '#f4778a' : '#6ee7b4') + '">' + g.emptyStarters + '</b></div>';
+  html += '</div>';
+
+  html += '<div class="section-label">Overall takeaways</div><div class="grade-card">';
+  g.notes.forEach(function(n){ html += '<div class="grade-tip" style="padding:5px 0;">\u2022 ' + esc(n) + '</div>'; });
+  html += '</div>';
+
+  html += '<div class="section-label">Round by round</div>';
+  g.rounds.forEach(function(r){
+    html += '<div class="grade-card">' +
+      '<div class="grade-round">Round ' + r.round + ' &middot; Pick ' + r.label + '</div>' +
+      '<div class="grade-verdict ' + r.cls + '">' + r.verdict + (r.cost > 2 ? ' \u2014 ' + r.cost + ' spots given up' : '') + '</div>' +
+      '<div class="grade-pick">' + esc(r.player.name) + ' ' + ageChip(r.player) +
+      ' <span class="team-tag">' + r.player.pos + ' &middot; ' + r.player.team + ' &middot; #' + r.player.rank + '</span></div>' +
+      '<div class="grade-tip">' + esc(r.tip) + '</div>';
+    if (r.alts.length) {
+      html += '<div class="grade-alt">Also on the board: ' +
+        r.alts.map(function(a){ return esc(a.name) + ' (' + a.pos + ' #' + a.rank + ')'; }).join(' &middot; ') + '</div>';
+    }
+    html += '</div>';
+  });
+
+  html += '<div style="display:flex;gap:8px;margin:16px 0 8px;">' +
+    '<button class="mock-start-btn" style="margin:0;" onclick="restartMock()">\u21BB Run Another Mock</button>' +
+    '<button class="close-btn" style="flex:0 0 auto;" onclick="exitMock()">Exit</button></div>';
+  return html;
+}
+
+function renderView(){
+  var v = document.getElementById('view');
+  if (tab === 'grade') v.innerHTML = viewGrade();
+  else if (tab === 'draft') v.innerHTML = viewDraft();
+  else if (tab === 'team') v.innerHTML = viewTeam();
+  else v.innerHTML = viewBoard();
+  var si = document.getElementById('search-input');
+  if (si) si.value = search;
+}
+
+function viewDraft(){
+  var done = picks.length >= TOTAL_PICKS;
+  var onClock = done ? null : teamOnClock(picks.length + 1);
+  var isMine = onClock === MY_SLOT;
+  var html = '';
+  if (mockMode) {
+    html += '<div class="mock-banner"><div class="mock-banner-txt">MOCK DRAFT \u2014 other 11 teams auto-pick. Your real draft is saved.</div>' +
+      '<button class="mock-exit" onclick="exitMock()">Exit</button></div>';
+  } else {
+    html += '<button class="mock-start-btn" onclick="startMock()">\u25B6 Run a Mock Draft</button>';
+  }
+  if (!done) {
+    var mkt = marketState();
+    var myCounts = needCounts(myPlayers());
+    /* market strip: quality players left at each position + plain-language status */
+    html += '<div class="market-strip">';
+    ['QB','RB','WR','TE'].forEach(function(pos){
+      var st = mkt[pos];
+      var status, col;
+      if (st.tierLeft === 0) { status = 'GONE'; col = '#f4778a'; }
+      else if (st.supply === 0) { status = 'BARE'; col = '#f4778a'; }
+      else if (st.pressure >= 1) { status = 'SCARCE'; col = '#f4778a'; }
+      else if (st.pressure >= 0.6) { status = 'TIGHT'; col = '#f8a94e'; }
+      else if (st.pressure >= 0.3) { status = 'OK'; col = '#5bc0f8'; }
+      else { status = 'DEEP'; col = '#6ee7b4'; }
+      html += '<div class="market-cell"><div class="market-pos" style="color:' + POS_COLOR[pos] + '">' + pos + '</div>' +
+        '<div class="market-num" style="color:' + col + '">' + st.tierLeft + '</div>' +
+        '<div class="market-lbl" style="color:' + col + '">' + status + '</div></div>';
+    });
+    html += '</div>';
+    html += '<div class="market-caption">Players left in the current quality tier at each position. <b style="color:#f4778a">SCARCE</b> = that tier will likely be gone before your next pick &middot; <b style="color:#6ee7b4">DEEP</b> = safe to wait.</div>';
+    /* explicit alerts for squeezes and runs at positions I still need */
+    var alerts = [];
+    ['RB','WR','TE','QB'].forEach(function(pos){
+      var st = mkt[pos];
+      var short = STARTERS[pos] - myCounts[pos];
+      if (short > 0 && st.supply === 0 && st.bestName) {
+        alerts.push(pos + ' cupboard is bare \u2014 best left is ' + st.bestName + ' (#' + st.bestRank + '), only the ' + (st.bestIdx + 1) + 'th-best player on the board. Take value elsewhere and circle back.');
+      } else if (short > 0 && st.pressure >= 0.6) {
+        alerts.push('You still need ' + short + ' ' + pos + (short===1?'':'s') + ' and only ' + st.tierLeft + ' Tier ' + st.topTier + ' ' + pos + (st.tierLeft===1?' remains':'s remain') + ' \u2014 likely gone in the ' + st.gap + ' picks before your next turn.');
+      } else if (st.run >= 6 && st.recentTotal >= 8 && short > 0) {
+        alerts.push(pos + ' run in progress \u2014 ' + st.run + ' of the last ' + st.recentTotal + ' picks. Get ahead of it.');
+      } else if (short > 0 && myCounts[pos] + 1.5 <= st.leagueAvg) {
+        alerts.push('You\u0027re behind the league at ' + pos + ' (you ' + myCounts[pos] + ', league average ' + st.leagueAvg.toFixed(1) + ').');
+      }
+    });
+    alerts.slice(0, 2).forEach(function(a){ html += '<div class="market-note">' + esc(a) + '</div>'; });
+
+    var sugg = suggest(10);
+    html += '<div class="suggest-card"><div class="suggest-head">' +
+      (isMine ? 'Top 10 for YOU' : 'Top 10 available (Team ' + onClock + ' picking)') + '</div>';
+    sugg.forEach(function(s, i){
+      var p = s.p;
+      html += '<div class="suggest-row" onclick="openPlayer(' + p.rank + ')">' +
+        '<div class="sug-num">' + (i + 1) + '</div>' + badge(p.pos) +
+        '<div class="flex1"><div class="suggest-name">' +
+        (i === 0 && isMine ? '<span class="star">\u2605</span> ' : '') +
+        esc(p.name) + ' ' + ageChip(p) + ' <span class="team-tag">' + p.team + ' &middot; #' + p.rank + '</span></div>' +
+        (s.reasons.length ? '<div class="reason">' + esc(s.reasons.slice(0,2).join(' \u00b7 ')) + '</div>' : '') +
+        '</div><div class="hint">INFO</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '<input id="search-input" class="search" placeholder="Search player or team\u2026" oninput="onSearch(this)">';
+  html += '<div class="chip-row">';
+  ['ALL','QB','RB','WR','TE','K','DST'].forEach(function(pos){
+    var active = posFilter === pos;
+    var bg = active ? (POS_COLOR[pos] || '#5bc0f8') : '#141c3a';
+    var fg = active ? '#0a1024' : '#8fa0cf';
+    html += '<button class="chip" style="background:' + bg + ';color:' + fg + '" onclick="setPos(\'' + pos + '\')">' + pos + '</button>';
+  });
+  html += '</div>';
+  var q = search.trim().toLowerCase();
+  var list = available().filter(function(p){
+    if (posFilter !== 'ALL' && p.pos !== posFilter) return false;
+    if (q && p.name.toLowerCase().indexOf(q) < 0 && p.team.toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  }).slice(0, 40);
+  if (!list.length) {
+    html += '<div class="empty">No available players match. Clear the search or filter.</div>';
+  } else {
+    list.forEach(function(p){
+      var pr = PROJ[p.rank];
+      var eg = pr ? projEdge(p) : null;
+      html += '<div class="player-row" onclick="openPlayer(' + p.rank + ')">' +
+        '<div class="rank-num">' + p.rank + '</div>' + badge(p.pos) +
+        '<div class="flex1"><div class="p-name">' + esc(p.name) + ' ' + ageChip(p) +
+          (pr ? ' <span class="ppg-chip">' + pr.ppg.toFixed(1) + '</span>' : '') + '</div>' +
+        '<div class="team-tag">' + p.team + ' &middot; Tier ' + p.tier + (p.rookie ? ' &middot; Rookie' : '') +
+          (eg && Math.abs(eg.delta) >= 6 ? ' &middot; <span class="' + (eg.delta>0?'edge-up':'edge-dn') + '">' +
+            (eg.delta>0 ? 'produces like ' + p.pos + eg.prodRank : 'ranked above 2026 output') + '</span>' : '') +
+        '</div></div>' +
+        '<div class="hint">' + (done ? '' : '\u2192 T' + onClock) + '</div></div>';
+    });
+  }
+  return html;
+}
+
+function viewTeam(){
+  var mine = myPlayers();
+  var slots = slotRoster(mine);
+  var html = '';
+  var skill = mine.filter(function(p){ return p.pos !== 'K' && p.pos !== 'DST'; });
+  if (skill.length) {
+    var avg = skill.reduce(function(a,p){ return a + p.age; }, 0) / skill.length;
+    html += '<div class="avg-age">Avg skill-player age: <b style="color:' + (avg <= 25 ? '#6ee7b4' : avg >= 28 ? '#f4778a' : '#e6ebfa') + '">' + avg.toFixed(1) + '</b>' +
+      (avg <= 25 ? ' \u2014 young core, built to last' : avg >= 28 ? ' \u2014 win-now build, plan for turnover' : ' \u2014 balanced build') + '</div>';
+  }
+  html += '<div class="section-label">Starters</div>';
+  if (projStatus === 'ready') {
+    var lineupPPG = 0, covered = 0;
+    slots.slice(0, 11).forEach(function(s){
+      if (s.player && PROJ[s.player.rank]) { lineupPPG += PROJ[s.player.rank].ppg; covered++; }
+    });
+    if (covered) {
+      html += '<div class="avg-age">Projected starting lineup: <b style="color:#7fd4c1">' + lineupPPG.toFixed(1) + ' pts/week</b>' +
+        (covered < 11 ? ' <span style="color:#43507c">(' + covered + ' of 11 slots projected)</span>' : '') + '</div>';
+    }
+  }
+  slots.slice(0, 11).forEach(function(s){ html += rosterRow(s); });
+  html += '<div class="section-label">Bench</div>';
+  slots.slice(11).forEach(function(s){ html += rosterRow(s); });
+  html += '<div style="margin-top:20px;text-align:center;">';
+  if (confirmingReset) {
+    html += '<div style="color:#f4778a;margin-bottom:8px;font-size:14px;">Clear the entire draft? This can\'t be undone.</div>' +
+      '<button class="danger-btn" onclick="doReset()">Yes, reset draft</button>' +
+      '<button class="ghost-btn" onclick="cancelReset()">Cancel</button>';
+  } else {
+    html += '<button class="ghost-btn" onclick="askReset()">Reset draft</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function rosterRow(s){
+  var body = s.player
+    ? '<div class="flex1"><span style="font-weight:700;font-size:14px;">' + esc(s.player.name) + '</span> ' + ageChip(s.player) + ' ' +
+      '<span class="team-tag">' + s.player.team + ' &middot; #' + s.player.rank + '</span></div>'
+    : '<div class="flex1" style="color:#43507c;font-size:14px;">Empty</div>';
+  return '<div class="roster-row">' + badge(s.pos, s.label) + body + '</div>';
+}
+
+function viewBoard(){
+  if (!picks.length) return '<div class="empty">No picks yet. Log picks from the Draft tab as each team selects.</div>';
+  var html = '';
+  var rounds = Math.ceil(picks.length / NUM_TEAMS);
+  for (var r = 0; r < rounds; r++) {
+    html += '<div class="section-label">Round ' + (r + 1) + '</div>';
+    var start = r * NUM_TEAMS;
+    var end = Math.min(picks.length, start + NUM_TEAMS);
+    for (var i = start; i < end; i++) {
+      var overall = i + 1;
+      var t = teamOnClock(overall);
+      var p = BY_RANK[picks[i]];
+      var mine = t === MY_SLOT;
+      html += '<div class="board-row' + (mine ? ' mine' : '') + '" onclick="openPlayer(' + p.rank + ')">' +
+        '<div class="board-pick">' + pickLabel(overall) + '</div>' + badge(p.pos) +
+        '<div class="flex1" style="font-weight:600;font-size:14px;">' + esc(p.name) + '</div>' +
+        '<div class="team-tag"' + (mine ? ' style="color:#6ee7b4"' : '') + '>' + (mine ? 'YOU' : 'T' + t) + '</div></div>';
+    }
+  }
+  return html;
+}
+
+function playerNotes(p){
+  var notes = [];
+  var avail = available();
+  var isTaken = picks.indexOf(p.rank) >= 0;
+  var mine = myPlayers();
+  var counts = needCounts(mine);
+  /* age / dynasty outlook */
+  if (p.pos === 'DST') {
+    notes.push('Defenses are year-to-year in dynasty \u2014 stream them, never invest.');
+  } else if (p.pos === 'K') {
+    notes.push('Kickers hold almost no dynasty value \u2014 grab one in the last two rounds.');
+  } else {
+    if (p.rookie) notes.push('2026 rookie \u2014 hasn\u0027t played an NFL snap, so this price is all projection. Max upside, max risk.');
+    if (p.pos === 'RB') {
+      if (p.age <= 23) notes.push('Age ' + p.age + ' RB \u2014 in the sweet spot; RBs typically peak years 2\u20135.');
+      else if (p.age >= 30) notes.push('Age ' + p.age + ' RB \u2014 past the cliff. Only for a team pushing to win THIS year.');
+      else if (p.age >= 27) notes.push('Age ' + p.age + ' RB \u2014 1\u20132 prime years left; value will fall every season you hold him.');
+      else notes.push('Age ' + p.age + ' RB \u2014 in his prime window.');
+    } else if (p.pos === 'WR') {
+      if (p.age <= 23) notes.push('Age ' + p.age + ' WR \u2014 ascending; WRs often break out in years 2\u20133 and hold value into their late 20s.');
+      else if (p.age >= 31) notes.push('Age ' + p.age + ' WR \u2014 decline phase; treat as a short-term contributor.');
+      else if (p.age >= 28) notes.push('Age ' + p.age + ' WR \u2014 still productive, but resale value drops from here.');
+      else notes.push('Age ' + p.age + ' WR \u2014 prime years; the safest asset class in dynasty.');
+    } else if (p.pos === 'TE') {
+      if (p.age <= 24) notes.push('Age ' + p.age + ' TE \u2014 TEs break out late; patience usually pays.');
+      else if (p.age >= 31) notes.push('Age ' + p.age + ' TE \u2014 near the end of the productive curve.');
+      else notes.push('Age ' + p.age + ' TE \u2014 prime window.');
+    } else if (p.pos === 'QB') {
+      if (p.age <= 26) notes.push('Age ' + p.age + ' QB \u2014 could be a 10-year starter. In a 6pt pass TD league that\u0027s a franchise cornerstone.');
+      else if (p.age >= 34) notes.push('Age ' + p.age + ' QB \u2014 bridge option only; pair him with a young stash.');
+      else notes.push('Age ' + p.age + ' QB \u2014 prime years, and QBs age gracefully.');
+    }
+  }
+  /* tier scarcity */
+  if (p.pos !== 'K' && p.pos !== 'DST') {
+    var sameTier = avail.filter(function(a){ return a.pos === p.pos && a.tier === p.tier && a.rank !== p.rank; });
+    if (!isTaken) {
+      if (sameTier.length === 0) notes.push('LAST Tier ' + p.tier + ' ' + p.pos + ' on the board \u2014 the next ' + p.pos + ' is a clear step down.');
+      else if (sameTier.length <= 2) notes.push('Tier ' + p.tier + ' ' + p.pos + ' is almost gone \u2014 only ' + sameTier.length + ' other' + (sameTier.length===1?'':'s') + ' left.');
+      else notes.push(sameTier.length + ' other Tier ' + p.tier + ' ' + p.pos + 's still available if you wait.');
+    }
+  }
+  /* will he make it back to you? */
+  if (!isTaken) {
+    var currentOverall = picks.length + 1;
+    var nextAfter = myNextPick(currentOverall + 1);
+    var gap = nextAfter ? nextAfter - currentOverall : 999;
+    var idx = avail.findIndex(function(a){ return a.rank === p.rank; });
+    if (gap < 30) {
+      if (idx < gap) notes.push('Probably will NOT make it back to your next pick (' + gap + ' picks away).');
+      else if (idx < gap + 8) notes.push('Coin flip to survive to your next pick (' + gap + ' picks away).');
+      else notes.push('Good chance he\u0027s still there at your next pick (' + gap + ' picks away).');
+    }
+    /* roster fit */
+    if (p.pos === 'QB' && counts.QB >= 1) notes.push('You already have a QB \u2014 this would be a stash/backup.');
+    if (p.pos === 'TE' && counts.TE >= 1) notes.push('You already have a TE \u2014 this would be a flex/bench piece.');
+  }
+  return notes;
+}
+
+function openPlayer(rank){
+  var p = BY_RANK[rank];
+  if (!p) return;
+  currentModalRank = rank;
+  var isTaken = picks.indexOf(rank) >= 0;
+  var done = picks.length >= TOTAL_PICKS;
+  var onClock = done ? null : teamOnClock(picks.length + 1);
+  var notes = playerNotes(p);
+  var newsQ = encodeURIComponent(p.name + ' ' + (p.pos === 'DST' ? 'defense' : 'NFL') + ' news');
+  var html = '<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">' +
+    '<div style="display:flex;align-items:center;gap:10px;">' + badge(p.pos) +
+    '<div class="flex1"><div class="modal-name">' + esc(p.name) + '</div>' +
+    '<div class="modal-sub">' + p.team + (p.rookie ? ' &middot; 2026 Rookie' : '') + (isTaken ? ' &middot; ALREADY DRAFTED' : '') + '</div></div>' +
+    ageChip(p) + '</div>' +
+    '<div class="stat-grid">' +
+    '<div class="stat-box"><div class="stat-val">#' + p.rank + '</div><div class="stat-lbl">Dynasty</div></div>' +
+    '<div class="stat-box"><div class="stat-val">' + p.pos + (p.pos==='DST'?'':p.posRank) + '</div><div class="stat-lbl">Pos rank</div></div>' +
+    (PROJ[p.rank]
+      ? '<div class="stat-box"><div class="stat-val" style="color:#7fd4c1">' + PROJ[p.rank].ppg.toFixed(1) + '</div><div class="stat-lbl">Proj PPG</div></div>'
+      : '<div class="stat-box"><div class="stat-val">' + (p.pos==='DST' ? '\u2014' : p.age) + '</div><div class="stat-lbl">Age</div></div>') +
+    '</div>';
+  if (PROJ[p.rank]) {
+    var eg = projEdge(p);
+    var pr = PROJ[p.rank];
+    var line = 'Projects as ' + p.pos + eg.prodRank + ' for 2026 at ' + pr.ppg.toFixed(1) + ' PPG' +
+      (pr.pts ? ' (' + Math.round(pr.pts) + ' pts)' : '') + '.';
+    if (eg.delta >= 6) line += ' That is well ahead of his dynasty rank (' + p.pos + eg.dynPosRank + ') \u2014 a win-now bargain, but the market is discounting him for a reason, usually age.';
+    else if (eg.delta <= -6) line += ' His dynasty rank (' + p.pos + eg.dynPosRank + ') sits well above that \u2014 you are paying for future seasons, not 2026.';
+    else line += ' Roughly in line with his dynasty rank.';
+    html += '<div class="note-row">' + esc(line) + '</div>';
+  }
+  notes.forEach(function(n){ html += '<div class="note-row">' + esc(n) + '</div>'; });
+  var slug = p.name.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,'-');
+  html += '<div class="scout-head">Research</div>' +
+    '<div class="lookup-row">' +
+      '<a class="lookup-btn" href="https://www.google.com/search?q=' + encodeURIComponent(p.name + ' fantasy football 2026 outlook') + '" target="_blank" rel="noopener">News &amp; outlook</a>' +
+      '<a class="lookup-btn" href="https://www.google.com/search?q=' + encodeURIComponent(p.name + ' 2025 season stats') + '" target="_blank" rel="noopener">2025 stats</a>' +
+      '<a class="lookup-btn" href="https://www.fantasypros.com/nfl/players/' + slug + '.php" target="_blank" rel="noopener">FantasyPros</a>' +
+    '</div>';
+  html += '<div class="modal-actions">' +
+    (isTaken || done
+      ? '<button class="draft-btn" disabled>' + (isTaken ? 'Already drafted' : 'Draft complete') + '</button>'
+      : '<button class="draft-btn" onclick="draftFromModal(' + p.rank + ')">Draft to ' + (onClock === MY_SLOT ? 'MY TEAM' : 'Team ' + onClock) + '</button>') +
+    '<button class="close-btn" onclick="closeModal()">\u2715</button>' +
+    '</div></div></div>';
+  document.getElementById('modal').innerHTML = html;
+  /* pull cached scout report from storage if we don't have it in memory */
+  if (!scoutCache[rank] && hasStorage()) {
+    window.storage.get('scout-' + rank).then(function(r){
+      if (r && r.value && currentModalRank === rank) {
+        try {
+          var d = JSON.parse(r.value);
+          scoutCache[rank] = d;
+          var box = document.getElementById('scout-box');
+          if (box) box.innerHTML = scoutHTML(d);
+        } catch(e){}
+      }
+    }).catch(function(){});
+  }
+}
+function closeModal(){ currentModalRank = null; document.getElementById('modal').innerHTML = ''; }
+function draftFromModal(rank){ closeModal(); draftPlayer(rank); }
+
+function render(){
+  renderChyron();
+  renderView();
+  document.getElementById('tab-draft').className = 'tab-btn' + (tab==='draft' ? ' active' : '');
+  document.getElementById('tab-team').className = 'tab-btn' + (tab==='team' ? ' active' : '');
+  document.getElementById('tab-team').textContent = 'My Team (' + myPlayers().length + ')';
+  document.getElementById('tab-board').className = 'tab-btn' + (tab==='board' ? ' active' : '');
+  var gt = document.getElementById('tab-grade');
+  if (mockGrade) {
+    gt.style.display = '';
+    gt.className = 'tab-btn' + (tab==='grade' ? ' active' : '');
+    gt.textContent = 'Grade ' + mockGrade.letter;
+  } else {
+    gt.style.display = 'none';
+  }
+  document.getElementById('undo-btn').disabled = picks.length === 0;
+}
+
+loadDraft();
+</script>
+</body>
+</html>
