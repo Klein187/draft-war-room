@@ -334,6 +334,9 @@ body{
 .slot-empty{color:var(--text-3); font-size:14px}
 .roster-row.empty-slot{opacity:.72}
 
+
+.roster-row .pos-badge[data-extra]{opacity:.9}
+.slot-tag.extra{color:#FFD9A0; background:#2A1E0C; border-color:#4A3616}
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -1179,7 +1182,14 @@ function slotRoster(mine){
     if (!s)
       for (var m = 0; m < slots.length; m++)
         if (slots[m].pos === 'BN' && !slots[m].player) { s = slots[m]; break; }
-    if (s) s.player = pl;
+    /* bench full: overflow into IR so no drafted player is ever dropped from the view */
+    if (!s)
+      for (var m2 = 0; m2 < slots.length; m2++)
+        if (slots[m2].pos === 'IR' && !slots[m2].player) { s = slots[m2]; break; }
+    /* still nothing (e.g. you skipped a kicker, so that slot can never be used):
+       add an overflow row rather than hiding a player you actually drafted */
+    if (!s) { s = { label:'EXTRA', pos:'BN', player:null }; slots.push(s); }
+    s.player = pl;
   });
   return slots;
 }
@@ -1709,7 +1719,7 @@ function rosterRow(s){
   var mark = badge(s.player.pos);
   /* slots whose label isn't just the position keep a quiet tag so you still see the shape */
   var slotTag = (s.label !== s.player.pos)
-    ? '<span class="slot-tag">' + esc(s.label) + '</span>' : '';
+    ? '<span class="slot-tag' + (s.label === 'EXTRA' ? ' extra' : '') + '">' + esc(s.label) + '</span>' : '';
   return '<div class="roster-row">' + mark +
     '<div class="flex1"><div class="roster-name">' + esc(s.player.name) + ' ' + ageChip(s.player) + '</div>' +
     '<div class="team-tag">' + s.player.team + ' &middot; #' + s.player.rank + '</div></div>' +
