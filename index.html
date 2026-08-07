@@ -167,10 +167,10 @@ window.CLAUDE_PROXY = null;
 <div id="view"></div>
 <div id="modal"></div>
 <div id="windows"></div>
-<div class="footer">DYNASTY startup &middot; 12-team snake &middot; you pick #10 &middot; full PPR, 6pt pass TD &middot; dynasty board updated Jul 2026</div>
+<div class="footer">DYNASTY startup &middot; DYNASTY startup &middot; 12 teams &middot; 29 rounds &middot; pick #10 &middot; full PPR, 6pt pass TD</div>
 
 <script>
-var NUM_TEAMS = 12, MY_SLOT = 10, ROUNDS = 17;
+var NUM_TEAMS = 12, MY_SLOT = 10, ROUNDS = 29;   /* 11 starters + 15 bench + 3 IR */
 var TOTAL_PICKS = NUM_TEAMS * ROUNDS;
 var STARTERS = { QB:1, RB:2, WR:3, TE:1, FLEX:2, K:1, DST:1 };
 var POS_COLOR = { QB:'#ec5f8f', RB:'#6ee7b4', WR:'#5bc0f8', TE:'#f8a94e', K:'#b3a8f7', DST:'#c0705a' };
@@ -260,15 +260,56 @@ P(229,"Tua Tagovailoa","QB","ATL",28,10),P(230,"Deebo Samuel","WR","FA",30,10),P
 P(232,"Brian Robinson Jr.","RB","ATL",27,10),P(233,"Jauan Jennings","WR","MIN",29,10),P(234,"Ray Davis","RB","BUF",26,10),
 P(235,"Keaton Mitchell","RB","LAC",24,10),P(236,"Kayshon Boutte","WR","NE",24,10),P(237,"Justice Hill","RB","BAL",28,10),
 P(238,"Michael Mayer","TE","LV",25,10),P(239,"Sean Tucker","RB","TB",24,10),P(240,"Stefon Diggs","WR","FA",32,10),
-/* K + DST (fungible in dynasty; ranked by 2026 outlook) */
-P(241,"Brandon Aubrey","K","DAL",31,11),P(242,"Cameron Dicker","K","LAC",26,11),P(243,"Ka'imi Fairbairn","K","HOU",32,11),
-P(244,"Jake Bates","K","DET",27,11),P(245,"Chris Boswell","K","PIT",35,11),P(246,"Will Reichard","K","MIN",25,11),
-P(247,"Cam Little","K","JAX",23,11),P(248,"Harrison Mevis","K","LAR",24,11),P(249,"Eddy Pineiro","K","SF",30,11),
-P(250,"Harrison Butker","K","KC",31,11),P(251,"Jason Myers","K","SEA",35,11),P(252,"Tyler Bass","K","BUF",29,11),
-P(253,"Texans D/ST","DST","HOU",0,11),P(254,"Broncos D/ST","DST","DEN",0,11),P(255,"Seahawks D/ST","DST","SEA",0,11),
-P(256,"Rams D/ST","DST","LAR",0,11),P(257,"Steelers D/ST","DST","PIT",0,11),P(258,"Chargers D/ST","DST","LAC",0,11),
-P(259,"Patriots D/ST","DST","NE",0,11),P(260,"Eagles D/ST","DST","PHI",0,11),P(261,"Vikings D/ST","DST","MIN",0,11),
-P(262,"Packers D/ST","DST","GB",0,11),P(263,"Ravens D/ST","DST","BAL",0,11),P(264,"Bills D/ST","DST","BUF",0,11)
+P(241,"Anthony Richardson","QB","CLE",24,11),P(242,"Will Levis","QB","TEN",27,11),P(243,"Spencer Rattler","QB","NO",26,11),
+P(244,"Aidan O'Connell","QB","LV",28,11),P(245,"Jalen Milroe","QB","SEA",24,11),P(246,"Dillon Gabriel","QB","CLE",25,11),
+P(247,"Shedeur Sanders","QB","CLE",24,11),P(248,"Jake Browning","QB","CIN",30,11),P(249,"Najee Harris","RB","LAC",28,11),
+P(250,"Joe Mixon","RB","HOU",30,11),P(251,"Jerome Ford","RB","CLE",27,11),P(252,"Antonio Gibson","RB","NE",28,11),
+P(253,"Samaje Perine","RB","CIN",31,11),P(254,"Kendre Miller","RB","NO",25,11),P(255,"Isaac Guerendo","RB","SF",26,11),
+P(256,"MarShawn Lloyd","RB","GB",25,11),P(257,"Will Shipley","RB","PHI",25,11),P(258,"Blake Watson","RB","DEN",25,11),
+P(259,"Craig Reynolds","RB","DET",30,11),P(260,"Emanuel Wilson","RB","GB",27,11),P(261,"Tyler Badie","RB","DEN",27,11),
+P(262,"Sincere McCormick","RB","LV",25,11),P(263,"Hassan Haskins","RB","LAC",27,11),P(264,"Audric Estime","RB","CLE",24,11),
+P(265,"Cody Schrader","RB","SF",26,11),P(266,"Dameon Pierce","RB","HOU",26,11),P(267,"Zamir White","RB","LV",27,11),
+P(268,"Kareem Hunt","RB","KC",31,11),P(269,"Israel Abanikanda","RB","DAL",25,11),P(270,"Sione Vaki","RB","DET",25,11),
+P(271,"Raheim Sanders","RB","LAC",24,11),P(272,"Donovan Edwards","RB","NYJ",24,11),P(273,"Ollie Gordon","RB","FA",22,11),
+P(274,"Damien Martinez","RB","SEA",23,11),P(275,"Marcus Yarns","RB","LAC",23,11),P(276,"Xavier Legette","WR","CAR",25,11),
+P(277,"Darnell Mooney","WR","ATL",29,11),P(278,"Josh Palmer","WR","BUF",27,11),P(279,"Elijah Moore","WR","BUF",26,11),
+P(280,"Curtis Samuel","WR","BUF",30,11),P(281,"Michael Gallup","WR","FA",30,11),P(282,"Demarcus Robinson","WR","SF",32,11),
+P(283,"Marvin Mims Jr.","WR","DEN",25,11),P(284,"Devaughn Vele","WR","NO",28,11),P(285,"Tim Patrick","WR","DET",32,11),
+P(286,"Noah Brown","WR","WSH",30,11),P(287,"Cedrick Wilson Jr.","WR","NO",30,11),P(288,"Van Jefferson","WR","TEN",30,11),
+P(289,"Isaiah Bond","WR","CLE",23,11),P(290,"Xavier Restrepo","WR","TEN",24,11),P(291,"Dont'e Thornton","WR","FA",23,11),
+P(292,"Tez Johnson","WR","TB",24,11),P(293,"Jalen Royals","WR","KC",23,11),P(294,"Arian Smith","WR","NYJ",24,11),
+P(295,"Elijhah Badger","WR","PHI",24,11),P(296,"Kaden Prather","WR","GB",24,11),P(297,"Konata Mumpfield","WR","LAR",23,11),
+P(298,"Nick Nash","WR","ATL",25,11),P(299,"Andrew Armstrong","WR","MIA",25,11),P(300,"Efton Chism III","WR","NE",24,11),
+P(301,"Traeshon Holden","WR","MIA",24,11),P(302,"Ja'Corey Brooks","WR","CLE",23,11),P(303,"Junior Bergen","WR","SF",24,11),
+P(304,"Tommy Mellott","WR","LV",24,11),P(305,"Ricky White III","WR","TEN",24,11),P(306,"Roman Wilson","WR","PIT",25,11),
+P(307,"Malik Washington","WR","MIA",25,11),P(308,"Brenden Rice","WR","LAC",25,11),P(309,"Luke McCaffrey","WR","WSH",25,11),
+P(310,"Jermaine Burton","WR","CIN",25,11),P(311,"Ainias Smith","WR","PHI",25,11),P(312,"Bub Means","WR","NO",25,11),
+P(313,"Johnny Wilson","WR","PHI",25,11),P(314,"Jha'Quan Jackson","WR","TEN",25,11),P(315,"Tejhaun Palmer","WR","ARI",25,11),
+P(316,"Cade Otton","TE","TB",27,11),P(317,"Noah Fant","TE","CIN",28,11),P(318,"Cole Kmet","TE","CHI",27,11),
+P(319,"Tyler Conklin","TE","LAC",31,11),P(320,"Luke Musgrave","TE","GB",26,11),P(321,"Ben Sinnott","TE","WSH",24,11),
+P(322,"Darnell Washington","TE","PIT",25,11),P(323,"Jared Wiley","TE","KC",25,11),P(324,"Erick All Jr.","TE","CIN",25,11),
+P(325,"Cade Stover","TE","HOU",26,11),P(326,"Theo Johnson II","TE","FA",24,11),P(327,"Jake Briningstool","TE","MIN",24,11),
+P(328,"Harold Fannin","TE","FA",23,11),P(329,"Moliki Matavao","TE","NO",24,11),P(330,"Jackson Hawes","TE","BUF",25,11),
+P(331,"Mitchell Evans","TE","CAR",24,11),P(332,"Luke Lachey","TE","BAL",25,11),P(333,"Bryson Nesbit","TE","LAC",23,11),
+P(334,"Justin Joly","TE","NYG",23,11),P(335,"Jordan Whittington","WR","LAR",25,11),P(336,"Xavier Smith","WR","LAR",25,11),
+P(337,"Tyler Scott","WR","CHI",25,11),P(338,"Anthony Gould","WR","IND",24,11),P(339,"Ainias Smith II","WR","PHI",25,11),
+P(340,"David Moore Jr.","WR","CAR",23,11),P(341,"Dominic Lovett","WR","DET",24,11),P(342,"Jacolby George","WR","NE",24,11),
+P(343,"Theo Wease Jr.","WR","MIA",24,11),P(344,"Tre'Shaun Harrison","WR","LV",25,11),P(345,"Kevin Coleman Jr.","WR","BUF",23,11),
+P(346,"Chase Lundt","WR","FA",24,11),P(347,"Tahj Brooks","RB","CIN",24,11),P(348,"Phil Mafah","RB","DAL",24,11),
+P(349,"Corey Kiner","RB","LV",24,11),P(350,"Jarquez Hunter","RB","LAR",24,11),P(351,"Damien Martinez II","RB","SEA",23,11),
+P(352,"Ulysses Bentley IV","RB","MIA",24,11),P(353,"Rasheen Ali","RB","BAL",25,11),P(354,"Jawhar Jordan","RB","MIN",25,11),
+P(355,"Kalel Mullings","RB","TEN",24,11),P(356,"Montrell Johnson Jr.","RB","GB",24,11),P(357,"Devin Neal II","RB","NO",23,11),
+P(358,"Bam Knight","RB","ARI",26,11),P(359,"Deion Hankins","RB","TB",24,11),P(360,"Jordan Waters","RB","NE",25,11),
+P(361,"Tanner McLachlan","TE","CIN",25,11),P(362,"Jalin Conyers","TE","NO",24,11),P(363,"Thomas Fidone II","TE","NYJ",23,11),
+P(364,"Caden Prieskorn","TE","LV",25,11),P(365,"Jordan Murray","TE","IND",25,11),P(366,"CJ Dippre","TE","LAC",24,11),
+P(367,"Brandon Aubrey","K","DAL",31,12),P(368,"Cameron Dicker","K","LAC",26,12),P(369,"Ka'imi Fairbairn","K","HOU",32,12),
+P(370,"Jake Bates","K","DET",27,12),P(371,"Chris Boswell","K","PIT",35,12),P(372,"Will Reichard","K","MIN",25,12),
+P(373,"Cam Little","K","JAX",23,12),P(374,"Harrison Mevis","K","LAR",24,12),P(375,"Eddy Pineiro","K","SF",30,12),
+P(376,"Harrison Butker","K","KC",31,12),P(377,"Jason Myers","K","SEA",35,12),P(378,"Tyler Bass","K","BUF",29,12),
+P(379,"Texans D/ST","DST","HOU",0,12),P(380,"Broncos D/ST","DST","DEN",0,12),P(381,"Seahawks D/ST","DST","SEA",0,12),
+P(382,"Rams D/ST","DST","LAR",0,12),P(383,"Steelers D/ST","DST","PIT",0,12),P(384,"Chargers D/ST","DST","LAC",0,12),
+P(385,"Patriots D/ST","DST","NE",0,12),P(386,"Eagles D/ST","DST","PHI",0,12),P(387,"Vikings D/ST","DST","MIN",0,12),
+P(388,"Packers D/ST","DST","GB",0,12),P(389,"Ravens D/ST","DST","BAL",0,12),P(390,"Bills D/ST","DST","BUF",0,12)
 ];
 var BY_RANK = {};
 var posCounter = {};
@@ -427,8 +468,8 @@ var savedRealPicks = null;
 var mockGrade = null;
 
 /* roster construction rules for a 1QB, 17-round dynasty roster */
-var POS_CAP = { QB:2, RB:8, WR:9, TE:3, K:1, DST:1 };
-var POS_TARGET = { QB:2, RB:4, WR:5, TE:2, K:1, DST:1 };
+var POS_CAP = { QB:3, RB:12, WR:15, TE:5, K:1, DST:1 };   /* 37 capacity vs 29 picks */
+var POS_TARGET = { QB:2, RB:6, WR:7, TE:2, K:1, DST:1 };
 
 function remainingPicksFor(team, fromOverall){
   var n = 0;
@@ -532,13 +573,24 @@ function aiPickRank(overall){
       if (p.pos === 'TE') return counts.TE === 0;
       return false;
     }
-    if ((p.pos === 'K' || p.pos === 'DST') && round < 15) return false;
+    if ((p.pos === 'K' || p.pos === 'DST') && round < 26) return false;
     return true;
   });
   if (!pool.length) pool = avail.filter(function(p){ return counts[p.pos] < POS_CAP[p.pos]; });
+  if (!pool.length) pool = avail.filter(function(p){ return p.pos !== 'K' && p.pos !== 'DST'; });
   if (!pool.length) pool = avail;
 
-  var scored = pool.slice(0, 45).map(function(p){
+  /* K/DST sit at the very bottom of the board, so a plain top-N slice never sees them.
+     Pull the best eligible one in explicitly once their window opens. */
+  var cand = pool.slice(0, 45);
+  ['K','DST'].forEach(function(pos){
+    if (counts[pos] > 0) return;
+    if (round < 26 && !forced) return;
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i].pos === pos) { if (cand.indexOf(pool[i]) < 0) cand.push(pool[i]); break; }
+    }
+  });
+  var scored = cand.map(function(p){
     var s = 320 - p.rank;
     if (p.pos === 'QB') { if (counts.QB === 0) s += (round >= 4 ? 20 : 4); else s -= 60; }
     else if (p.pos === 'TE') { if (counts.TE === 0) s += 10; else s -= 50; }
@@ -610,7 +662,7 @@ function bestFitFor(pool, roster, round){
   var flexOpen = Math.max(0, STARTERS.FLEX - flexUsed);
   var capped = pool.filter(function(p){ return counts[p.pos] < POS_CAP[p.pos]; });
   var fits = capped.filter(function(p){
-    if (p.pos === 'K' || p.pos === 'DST') return round >= 15 && counts[p.pos] === 0;
+    if (p.pos === 'K' || p.pos === 'DST') return round >= 26 && counts[p.pos] === 0;
     if (p.pos === 'QB') return counts.QB === 0;
     if (p.pos === 'TE') return counts.TE === 0 || flexOpen > 0;
     return (STARTERS[p.pos] - counts[p.pos]) > 0 || flexOpen > 0;
@@ -654,7 +706,7 @@ function gradeMock(){
     var rawCost = p.rank - bestFit.rank;
     var slip = overall - p.rank; /* how far he fell past his rank */
     var isKD = (p.pos === 'K' || p.pos === 'DST');
-    if (isKD && round >= 15) rawCost = 0;
+    if (isKD && round >= 26) rawCost = 0;
     /* a pick the engine ranked highly was defensible on scarcity/depth grounds,
        even when a higher-ranked name was technically on the board.
        Credit scales with how strongly it was recommended. */
@@ -670,7 +722,7 @@ function gradeMock(){
     else { verdict = 'Reach'; cls = 'v-reach'; }
 
     if (isKD) {
-      tip = round >= 15
+      tip = round >= 26
         ? 'Correct timing \u2014 ' + (p.pos === 'K' ? 'kickers' : 'defenses') + ' belong in the final rounds and get replaced yearly.'
         : 'Too early. This roster spot should have been a young stash; ' + (p.pos==='K'?'kickers':'defenses') + ' are free every season. ' + bestFit.name + ' (' + bestFit.pos + ' #' + bestFit.rank + ') was the pick here.';
     } else if (sugIdx === 0) {
@@ -711,7 +763,7 @@ function gradeMock(){
   var avgAge = skill.length ? skill.reduce(function(a,x){ return a + x.age; }, 0) / skill.length : 0;
   var elites = mine.filter(function(x){ return x.rank <= 24; }).length;
   var avgCost = rounds.length ? totalCost / rounds.length : 0;
-  var earlyKDst = rounds.filter(function(r){ return (r.player.pos==='K'||r.player.pos==='DST') && r.round < 16; }).length;
+  var earlyKDst = rounds.filter(function(r){ return (r.player.pos==='K'||r.player.pos==='DST') && r.round < 26; }).length;
   var reaches = rounds.filter(function(r){ return r.cost > 14; }).length;
 
   var score = 90;
@@ -865,7 +917,8 @@ function slotRoster(mine){
   add('WR','WR'); add('WR','WR'); add('WR','WR');
   add('TE','TE'); add('W/R/T','FLEX'); add('W/R/T','FLEX');
   add('K','K'); add('DEF','DST');
-  for (var i = 0; i < 6; i++) add('BN','BN');
+  for (var i = 0; i < 15; i++) add('BN','BN');
+  for (var j = 0; j < 3; j++) add('IR','IR');
   mine.forEach(function(pl){
     var s = null;
     for (var j = 0; j < slots.length; j++)
@@ -910,7 +963,16 @@ function suggest(n){
   });
   if (!pool.length) pool = avail;
 
-  var scored = pool.slice(0, 80).map(function(p, idxInPool){
+  /* same as the AI: K/DST rank last, so surface the best eligible one explicitly */
+  var cand = pool.slice(0, 80);
+  ['K','DST'].forEach(function(pos){
+    if (counts[pos] > 0) return;
+    if (round < 26 && !forced) return;
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i].pos === pos) { if (cand.indexOf(pool[i]) < 0) cand.push(pool[i]); break; }
+    }
+  });
+  var scored = cand.map(function(p, idxInPool){
     var score = 320 - p.rank;
     var reasons = [];
     if (forced) {
@@ -939,7 +1001,7 @@ function suggest(n){
       if (p.pos === 'WR') score += 1; /* mild full-PPR lean; heavier weighting crowded out RB value in testing */
     } else {
       if (counts[p.pos] > 0) { score -= 300; }
-      else if (round >= 15) { score += 40; reasons.push('Time to grab your ' + (p.pos==='K'?'kicker':'defense')); }
+      else if (round >= 26) { score += 40; reasons.push('Time to grab your ' + (p.pos==='K'?'kicker':'defense')); }
       else { score -= 250; reasons.push('Never early on K/DEF in dynasty \u2014 stash young players instead'); }
     }
 
@@ -1052,7 +1114,7 @@ function onSearch(el){ search = el.value; renderView(); }
 function setPos(pos){ posFilter = pos; render(); }
 
 function badge(pos, label){
-  var c = POS_COLOR[pos] || (pos === 'FLEX' ? '#7fd4c1' : '#3a4569');
+  var c = POS_COLOR[pos] || (pos === 'FLEX' ? '#7fd4c1' : pos === 'IR' ? '#6b4152' : '#3a4569');
   return '<div class="pos-badge" style="background:' + c + '">' + esc(label || pos) + '</div>';
 }
 
@@ -1245,8 +1307,10 @@ function viewTeam(){
     }
   }
   slots.slice(0, 11).forEach(function(s){ html += rosterRow(s); });
-  html += '<div class="section-label">Bench</div>';
-  slots.slice(11).forEach(function(s){ html += rosterRow(s); });
+  html += '<div class="section-label">Bench (15)</div>';
+  slots.slice(11, 26).forEach(function(s){ html += rosterRow(s); });
+  html += '<div class="section-label">Injured Reserve (3)</div>';
+  slots.slice(26).forEach(function(s){ html += rosterRow(s); });
   html += '<div style="margin-top:20px;text-align:center;">';
   if (confirmingReset) {
     html += '<div style="color:#f4778a;margin-bottom:8px;font-size:14px;">Clear the entire draft? This can\'t be undone.</div>' +
@@ -1383,9 +1447,7 @@ function openPlayer(rank){
   var slug = p.name.toLowerCase().replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,'-');
   html += '<div class="scout-head">Research</div>' +
     '<div class="lookup-row">' +
-      '<button class="lookup-btn" onclick="openResearch(\'https://www.google.com/search?q=' + encodeURIComponent(p.name + ' fantasy football 2026 outlook') + '\', \'' + esc(p.name) + ' \u2014 news\')">News &amp; outlook</button>' +
-      '<button class="lookup-btn" onclick="openResearch(\'https://www.google.com/search?q=' + encodeURIComponent(p.name + ' 2025 season stats') + '\', \'' + esc(p.name) + ' \u2014 2025 stats\')">2025 stats</button>' +
-      '<button class="lookup-btn" onclick="openResearch(\'https://www.fantasypros.com/nfl/players/' + slug + '.php\', \'' + esc(p.name) + ' \u2014 FantasyPros\')">FantasyPros</button>' +
+      '<button class="lookup-btn" onclick="openResearch(\'https://www.fantasypros.com/nfl/players/' + slug + '.php\', \'' + esc(p.name) + '\')">Open FantasyPros profile</button>' +
     '</div>';
   html += '<div class="modal-actions">' +
     (isTaken || done
