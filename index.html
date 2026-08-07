@@ -444,6 +444,15 @@ kbd{font-family:var(--mono); font-size:11.5px; font-weight:600; background:var(-
   .cr-cell{flex:1; min-width:0}
 }
 
+
+/* ---------- rookies view ---------- */
+.chip-rook{border-color:#4A3616; color:#E5B77A}
+.chip-rook[aria-pressed="true"]{background:#2A1E0C; color:var(--gold); border-color:#6B5220}
+.rook-note{font-size:12px; color:var(--text-2); background:var(--panel-2);
+  border:1px solid var(--line-soft); border-left:3px solid var(--gold);
+  border-radius:var(--r-sm); padding:9px 11px; margin-bottom:var(--sp-3); line-height:1.45}
+.rook-note b{font-family:var(--mono); color:var(--gold)}
+
 </style>
 <script>
 /* ---- deploy shim: provides window.storage (artifact API) on top of localStorage ---- */
@@ -1737,24 +1746,51 @@ function panelList(){
   var onClock = done ? null : teamOnClock(picks.length + 1);
   var html = '<input id="search-input" class="search" placeholder="Search player or team\u2026" oninput="onSearch(this)" aria-label="Search players">';
   html += '<div class="chip-row">';
-  ['ALL','QB','RB','WR','TE','K','DST'].forEach(function(pos){
-    html += '<button type="button" class="chip" aria-pressed="' + (posFilter === pos) + '" ' +
-      'onclick="setPos(\'' + pos + '\')">' + (pos === 'ALL' ? 'All' : pos) + '</button>';
+  ['ALL','QB','RB','WR','TE','K','DST','ROOK'].forEach(function(pos){
+    var label = pos === 'ALL' ? 'All' : pos === 'ROOK' ? 'Rookies' : pos;
+    html += '<button type="button" class="chip' + (pos === 'ROOK' ? ' chip-rook' : '') +
+      '" aria-pressed="' + (posFilter === pos) + '" ' +
+      'onclick="setPos(\'' + pos + '\')">' + label + '</button>';
   });
   html += '</div>';
+  if (posFilter === 'ROOK') {
+    var rookTotal = PLAYERS.filter(function(p){ return p.rookie; }).length;
+    var rookLeft = available().filter(function(p){ return p.rookie; }).length;
+    html += '<div class="rook-note">2026 rookie class \u2014 <b>' + rookLeft + '</b> of ' + rookTotal +
+      ' still available. Highest ceiling, highest variance: none of them has played an NFL snap.</div>';
+  }
   var q = search.trim().toLowerCase();
   var all = available().filter(function(p){
-    if (posFilter !== 'ALL' && p.pos !== posFilter) return false;
+    if (posFilter === 'ROOK') { if (!p.rookie) return false; }
+    else if (posFilter !== 'ALL' && p.pos !== posFilter) return false;
     if (q && p.name.toLowerCase().indexOf(q) < 0 && p.team.toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
+  if (posFilter === 'ROOK') {
+    /* real sections: group by position, best position first, ranked inside each */
+    var firstAt = {};
+    all.forEach(function(p){ if (firstAt[p.pos] == null) firstAt[p.pos] = p.rank; });
+    all = all.slice().sort(function(a, b){
+      if (a.pos !== b.pos) return firstAt[a.pos] - firstAt[b.pos];
+      return a.rank - b.rank;
+    });
+  }
   var list = all.slice(0, isWide() ? 200 : 40);
   if (!list.length) {
-    html += '<div class="empty">No players match. Clear the search or filter.</div>';
+    html += '<div class="empty">' + (posFilter === 'ROOK'
+      ? 'Every rookie on the board has been drafted.'
+      : 'No players match. Clear the search or filter.') + '</div>';
   } else {
-    var lastTier = null;
+    var lastTier = null, lastPos = null;
     list.forEach(function(p){
-      if (posFilter !== 'ALL' && p.tier !== lastTier) {
+      if (posFilter === 'ROOK') {
+        if (p.pos !== lastPos) {
+          var atPos = all.filter(function(x){ return x.pos === p.pos; }).length;
+          html += '<div class="tier-rule"><span style="color:' + POS_COLOR[p.pos] + '">' + p.pos +
+            '</span><i></i><span class="tier-n">' + atPos + ' left</span></div>';
+          lastPos = p.pos;
+        }
+      } else if (posFilter !== 'ALL' && p.tier !== lastTier) {
         var leftInTier = all.filter(function(x){ return x.tier === p.tier; }).length;
         html += '<div class="tier-rule"><span>Tier ' + p.tier + '</span><i></i><span class="tier-n">' +
           leftInTier + ' left</span></div>';
